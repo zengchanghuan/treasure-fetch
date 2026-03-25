@@ -172,6 +172,70 @@
       padding-top: 12px;
     }
 
+    /* ── FAQ 区域 ── */
+    .faq-section {
+      margin-top: 48px;
+      padding-top: 32px;
+      border-top: 1px solid var(--border);
+    }
+    .faq-section h2 {
+      font-size: 1.1rem;
+      color: var(--accent);
+      margin-bottom: 20px;
+      font-weight: 500;
+    }
+    .faq-item {
+      margin-bottom: 20px;
+    }
+    .faq-item summary {
+      cursor: pointer;
+      color: var(--text);
+      font-size: .92rem;
+      font-weight: 500;
+      padding: 10px 0;
+      list-style: none;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .faq-item summary::before {
+      content: '▸';
+      color: var(--accent-dim);
+      transition: transform .2s;
+    }
+    .faq-item[open] summary::before {
+      transform: rotate(90deg);
+    }
+    .faq-item p {
+      color: var(--text2);
+      font-size: .85rem;
+      line-height: 1.8;
+      padding: 4px 0 8px 20px;
+    }
+    .faq-item a { color: var(--accent); text-decoration: none; }
+    .faq-item a:hover { text-decoration: underline; }
+
+    .how-to-section {
+      margin-top: 36px;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px 24px;
+    }
+    .how-to-section h3 {
+      font-size: .95rem;
+      color: var(--accent);
+      margin-bottom: 14px;
+      font-weight: 500;
+    }
+    .how-to-section ol {
+      color: var(--text2);
+      font-size: .85rem;
+      line-height: 2;
+      padding-left: 20px;
+    }
+    .how-to-section ol li strong { color: var(--text); }
+
     @media (max-width: 520px) {
       .input-group { flex-direction: column; }
       .meta-header { flex-direction: column; align-items: center; text-align: center; }
@@ -444,6 +508,47 @@
     });
     input.addEventListener('keydown', e => { if (e.key === 'Enter') fetchMeta(); });
   </script>
+
+    <div class="how-to-section">
+      <h3>如何获取画作链接？</h3>
+      <ol>
+        <li>访问 <strong><a href="https://g2.ltfc.net" target="_blank" style="color: var(--accent);">中华珍宝馆 (g2.ltfc.net)</a></strong></li>
+        <li>搜索或浏览你感兴趣的书画作品，<strong>点击进入高清浏览页面</strong></li>
+        <li><strong>复制浏览器地址栏中的完整链接</strong>（格式形如 <code style="color:var(--accent);background:var(--border);padding:2px 6px;border-radius:4px;">g2.ltfc.net/view/SUHA/...</code>）</li>
+        <li>回到本页面，粘贴链接并点击「解析」</li>
+      </ol>
+    </div>
+
+    <div class="faq-section">
+      <h2>常见问题</h2>
+
+      <details class="faq-item">
+        <summary>什么是瓦片图 (Deep Zoom Tiles)？</summary>
+        <p>瓦片图是一种将超高分辨率图片切割成无数小方块（通常 512×512 像素）的技术，类似地图软件的缩放。博物馆网站使用这种技术让用户流畅地浏览巨幅画作，但无法直接保存完整原图。墨韵图传能自动下载所有碎片并无损拼接还原为完整的高清大图。</p>
+      </details>
+
+      <details class="faq-item">
+        <summary>支持哪些网站和博物馆？</summary>
+        <p>目前支持 <a href="https://g2.ltfc.net" target="_blank">中华珍宝馆 (g2.ltfc.net)</a> 收录的所有书画作品，涵盖台北故宫博物院、大都会艺术博物馆、大英博物馆等数十家文博机构的数字化藏品。</p>
+      </details>
+
+      <details class="faq-item">
+        <summary>下载的图片是什么格式？分辨率有多高？</summary>
+        <p>单幅画作输出为 JPEG 格式（quality=95，近无损）。多页册页会自动打包为 ZIP。分辨率取决于原始数据，部分顶级藏品可达数万×数万像素。你可以在解析后自由选择不同的缩放级别（Level），级别越高，分辨率越大，下载耗时也越长。</p>
+      </details>
+
+      <details class="faq-item">
+        <summary>下载速度慢怎么办？</summary>
+        <p>高分辨率画作可能包含数百甚至上千张图块，下载时间从几十秒到几分钟不等。建议选择适中的分辨率级别，并确保网络连接稳定。下载期间请勿关闭或刷新页面。</p>
+      </details>
+
+      <details class="faq-item">
+        <summary>下载的画作可以商用吗？</summary>
+        <p>本工具仅供个人学习与艺术交流使用。画作的版权归原博物馆或收藏机构所有，商业使用前请获取相关机构的正式授权。</p>
+      </details>
+    </div>
+  </main>
+
   <footer style="text-align: center; padding: 20px; font-size: 0.8rem; color: var(--text2); border-top: 1px solid var(--border); margin-top: auto;">
     <p>免责声明：本工具仅供学习与艺术交流使用，不得用于商业用途。请尊重并保护数字版权。</p>
     <p style="margin-top: 5px;">&copy; 2026 Moyun Art. All rights reserved.</p>
