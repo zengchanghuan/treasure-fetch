@@ -190,6 +190,13 @@
       <input id="urlInput" type="text" placeholder="粘贴作品链接 https://g2.ltfc.net/view/..." />
       <button class="btn" id="fetchBtn" onclick="fetchMeta()">解析</button>
     </div>
+    
+    <div class="demo-links" style="margin-top: 12px; font-size: 0.85rem; color: var(--text2);">
+      没有链接？试试解析：
+      <a href="javascript:void(0)" onclick="fillDemo('https://g2.ltfc.net/view/SU_8d975a5074c7/')" style="color: var(--accent); text-decoration: none; border-bottom: 1px dashed var(--accent);">《清明上河图》</a>
+      <span style="margin: 0 8px;">|</span>
+      <a href="javascript:void(0)" onclick="fillDemo('https://g2.ltfc.net/view/SU_c1c911e3b5e4/')" style="color: var(--accent); text-decoration: none; border-bottom: 1px dashed var(--accent);">《千里江山图》</a>
+    </div>
 
     <div id="errorBox" class="error"></div>
 
@@ -377,11 +384,11 @@
 
           if (d.status === 'downloading') {
             fill.style.width = Math.min(p, 95) + '%';
-            msg.textContent = `下载中 ${d.done}/${d.total}`;
+            msg.textContent = `下载中 ${d.done}/${d.total} (请耐心等待，勿关闭页面)`;
             pct.textContent = p + '%';
           } else if (d.status === 'stitching') {
             fill.style.width = '96%';
-            msg.textContent = '拼接中...';
+            msg.textContent = '图块下载完成，正在合成最终高清大图...';
             pct.textContent = '96%';
           } else if (d.status === 'done') {
             pollStopped = true;
@@ -415,6 +422,12 @@
       document.body.appendChild(a);
       a.click();
       a.remove();
+    }
+
+    function fillDemo(url) {
+      const input = document.getElementById('urlInput');
+      input.value = url;
+      fetchMeta();
     }
 
     /* ── 自动识别粘贴 ── */
