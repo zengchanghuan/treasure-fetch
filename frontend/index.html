@@ -2,7 +2,7 @@
 <html lang="zh-CN">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
   <title>墨韵图传 — 高清书画瓦片图一键还原下载工具</title>
   <meta name="description" content="墨韵图传 (Moyun Fetch) 是一款专业的高清古画、书画瓦片图下载与还原工具。支持突破瓦片图限制，一键下载并拼接完整高清艺术原图。">
   <meta name="keywords" content="古画下载, 书画下载, 瓦片图还原, 高清古画, 数字艺术下载, Deep Zoom, 图片拼接, 墨韵图传">
@@ -94,9 +94,11 @@
       border: 1px solid var(--border);
       border-radius: var(--radius);
       color: var(--text);
-      font-size: .95rem;
+      font-size: 16px; /* iOS Safari 低于 16px 会自动缩放页面 */
       outline: none;
       transition: all .3s ease;
+      min-height: 44px; /* iOS 触摸热区最低标准 */
+      -webkit-appearance: none;
     }
     .input-group input:focus { 
       border-color: var(--accent); 
@@ -114,8 +116,13 @@
       cursor: pointer;
       transition: background .2s;
       white-space: nowrap;
+      min-height: 44px; /* iOS 触摸热区最低标准 */
+      min-width: 72px;
+      -webkit-tap-highlight-color: transparent;
+      touch-action: manipulation; /* 消除 300ms 点击延迟 */
     }
     .btn:hover { background: var(--accent); }
+    .btn:active { background: var(--accent); opacity: .85; }
     .btn:disabled { opacity: .4; cursor: not-allowed; }
 
     /* ── 错误 ── */
@@ -282,8 +289,12 @@
 
     @media (max-width: 520px) {
       .input-group { flex-direction: column; }
+      .input-group input { font-size: 16px; } /* 强制防 iOS 缩放 */
+      .btn { width: 100%; justify-content: center; }
       .meta-header { flex-direction: column; align-items: center; text-align: center; }
       .meta-thumb { width: 80px; min-height: 100px; }
+      header h1 { font-size: 1.3rem; letter-spacing: 6px; }
+      main { padding: 24px 16px 60px; }
     }
   </style>
 </head>
