@@ -265,6 +265,46 @@
     }
     .faq-item a { color: var(--accent); text-decoration: none; }
     .faq-item a:hover { text-decoration: underline; }
+    .faq-demo-row {
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 8px;
+    }
+    .faq-demo-hint {
+      font-size: .8rem;
+      color: var(--text2);
+      opacity: .7;
+    }
+
+    /* ── Demo 链接区 ── */
+    .demo-links {
+      margin-top: 12px;
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 8px;
+      font-size: 0.85rem;
+      color: var(--text2);
+    }
+    .demo-label { white-space: nowrap; }
+    .demo-btn {
+      padding: 5px 14px;
+      background: transparent;
+      color: var(--accent);
+      border: 1px dashed var(--accent);
+      border-radius: 20px;
+      font-size: .82rem;
+      cursor: pointer;
+      transition: all .2s;
+      min-height: 36px;
+      -webkit-tap-highlight-color: transparent;
+      touch-action: manipulation;
+    }
+    .demo-btn:hover { background: rgba(201,169,110,.12); }
+    .demo-btn:disabled { opacity: .5; cursor: default; }
+    .demo-btn.copied { border-color: #4caf50; color: #4caf50; }
 
     .how-to-section {
       margin-top: 36px;
@@ -316,9 +356,11 @@
       <button class="btn" id="fetchBtn" onclick="fetchMeta()">解析</button>
     </div>
     
-    <div class="demo-links" style="margin-top: 12px; font-size: 0.85rem; color: var(--text2);">
-      没有链接？试试解析：
-      <a href="javascript:void(0)" onclick="fillDemo('https://g2.ltfc.net/view/SUHA/647a19401977e748e6a9bfbe')" style="color: var(--accent); text-decoration: none; border-bottom: 1px dashed var(--accent);">《行书詹同松磵亭轴》</a>
+    <div class="demo-links">
+      <span class="demo-label">没有链接？试试：</span>
+      <button class="demo-btn" onclick="fillDemo(this, 'https://g2.ltfc.net/view/SUHA/647a19401977e748e6a9bfbe')">
+        《行书詹同松磵亭轴》
+      </button>
     </div>
 
     <div id="errorBox" class="error"></div>
@@ -547,10 +589,35 @@
       a.remove();
     }
 
-    function fillDemo(url) {
+    const DEMO_URL = 'https://g2.ltfc.net/view/SUHA/647a19401977e748e6a9bfbe';
+
+    function fillDemo(btnEl, url) {
       const input = document.getElementById('urlInput');
-      input.value = url;
+      input.value = url || DEMO_URL;
+      /* 视觉反馈 */
+      if (btnEl) {
+        const orig = btnEl.textContent;
+        btnEl.textContent = '✓ 已填入，解析中…';
+        btnEl.disabled = true;
+        setTimeout(() => { btnEl.textContent = orig; btnEl.disabled = false; }, 2500);
+      }
       fetchMeta();
+    }
+
+    function copyDemo(btnEl) {
+      navigator.clipboard.writeText(DEMO_URL).then(() => {
+        const orig = btnEl.textContent;
+        btnEl.textContent = '✓ 已复制';
+        btnEl.classList.add('copied');
+        setTimeout(() => { btnEl.textContent = orig; btnEl.classList.remove('copied'); }, 2000);
+      }).catch(() => {
+        /* 降级：选中输入框并写入 */
+        const input = document.getElementById('urlInput');
+        input.value = DEMO_URL;
+        input.select();
+        btnEl.textContent = '已填入输入框';
+        setTimeout(() => { btnEl.textContent = '复制示例链接'; }, 2000);
+      });
     }
 
     /* ── 自动识别粘贴 ── */
@@ -595,6 +662,11 @@
       <details class="faq-item">
         <summary>什么是瓦片图 (Deep Zoom Tiles)？</summary>
         <p>瓦片图是一种将超高分辨率图片切割成无数小方块（通常 512×512 像素）的技术，类似地图软件的缩放。博物馆网站使用这种技术让用户流畅地浏览巨幅画作，但无法直接保存完整原图。墨韵图传能自动下载所有碎片并无损拼接还原为完整的高清大图。</p>
+        <p class="faq-demo-row">
+          没有可用链接？
+          <button class="demo-btn" onclick="copyDemo(this)">复制示例链接</button>
+          <span class="faq-demo-hint">复制后粘贴到上方输入框即可体验</span>
+        </p>
       </details>
 
       <details class="faq-item">
