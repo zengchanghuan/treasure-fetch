@@ -240,7 +240,7 @@
   </main>
 
   <script>
-    const URL_RE = /g2\.ltfc\.net\/view\/[A-Z]+\/[a-f0-9]{24}/;
+    const URL_RE = /g2\.ltfc\.net\/view\/[A-Za-z0-9_]+/;
     let currentUrl = '';
     let pollStopped = false;
 
@@ -254,8 +254,8 @@
     /* ── 解析元数据 ── */
     async function fetchMeta() {
       const raw = document.getElementById('urlInput').value.trim();
-      const match = raw.match(/g2\.ltfc\.net\/view\/[A-Z]+\/[a-f0-9]{24}/);
-      if (!match) { showError('未识别到有效链接'); return; }
+      const match = raw.match(/g2\.ltfc\.net\/view\/[A-Za-z0-9_]+/);
+      if (!match) { showError('未识别到有效链接，请确保链接包含 g2.ltfc.net/view/'); return; }
       const url = 'https://' + match[0];
       hideError();
 
