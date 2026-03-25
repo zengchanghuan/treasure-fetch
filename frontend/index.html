@@ -193,9 +193,7 @@
     
     <div class="demo-links" style="margin-top: 12px; font-size: 0.85rem; color: var(--text2);">
       没有链接？试试解析：
-      <a href="javascript:void(0)" onclick="fillDemo('https://g2.ltfc.net/view/SU_8d975a5074c7/')" style="color: var(--accent); text-decoration: none; border-bottom: 1px dashed var(--accent);">《清明上河图》</a>
-      <span style="margin: 0 8px;">|</span>
-      <a href="javascript:void(0)" onclick="fillDemo('https://g2.ltfc.net/view/SU_c1c911e3b5e4/')" style="color: var(--accent); text-decoration: none; border-bottom: 1px dashed var(--accent);">《千里江山图》</a>
+      <a href="javascript:void(0)" onclick="fillDemo('https://g2.ltfc.net/view/SUHA/647a19401977e748e6a9bfbe')" style="color: var(--accent); text-decoration: none; border-bottom: 1px dashed var(--accent);">《行书詹同松磵亭轴》</a>
     </div>
 
     <div id="errorBox" class="error"></div>
@@ -240,7 +238,7 @@
   </main>
 
   <script>
-    const URL_RE = /g2\.ltfc\.net\/view\/[A-Za-z0-9_]+/;
+    const URL_RE = /g2\.ltfc\.net\/view\/[A-Za-z]+\/[a-f0-9]{24}/;
     let currentUrl = '';
     let pollStopped = false;
 
@@ -254,8 +252,8 @@
     /* ── 解析元数据 ── */
     async function fetchMeta() {
       const raw = document.getElementById('urlInput').value.trim();
-      const match = raw.match(/g2\.ltfc\.net\/view\/[A-Za-z0-9_]+/);
-      if (!match) { showError('未识别到有效链接，请确保链接包含 g2.ltfc.net/view/'); return; }
+      const match = raw.match(/g2\.ltfc\.net\/view\/[A-Za-z]+\/[a-f0-9]{24}/);
+      if (!match) { showError('未识别到有效链接，请确保链接格式为 g2.ltfc.net/view/SUHA/24位ID'); return; }
       const url = 'https://' + match[0];
       hideError();
 

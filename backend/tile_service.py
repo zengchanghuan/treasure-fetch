@@ -29,9 +29,36 @@ CDN_HOST = "https://cag-ac.ltfc.net"
 API_HOST = "https://api.quanku.art"
 _SECRET_KEY = "ltfcdotnet"
 _TILE_SIZE = 512
+_APP_KEY = "CAGWEB"
+_APP_SEC = "ZETYK0B8KTQB41KYWA2"
 _URL_RE = re.compile(
-    r"g2\.ltfc\.net/view/(?:(?P<type_old>[A-Z]+)/(?P<id_old>[a-f0-9]{24})|(?P<type_new>[A-Z]+)_(?P<id_new>[a-f0-9]+))"
+    r"g2\.ltfc\.net/view/(?P<type>[A-Za-z]+)/(?P<id>[a-f0-9]{24})"
 )
+
+# ── 游客令牌缓存 ─────────────────────────────────────────────
+_tour_token: str = ""
+_tour_token_expire: float = 0
+
+
+async def _get_tour_token(client: httpx.AsyncClient) -> str:
+    """获取或复用游客令牌。"""
+    global _tour_token, _tour_token_expire
+    if _tour_token and time.time() < _tour_token_expire:
+        return _tour_token
+    resp = await client.post(
+        f"{API_HOST}/cag2.TouristService/getAccessToken",
+        json={},
+        headers={"Referer": "https://g2.ltfc.net/", "Origin": "https://g2.ltfc.net"},
+    )
+    resp.raise_for_status()
+    data = resp.json()
+    _tour_token = data.get("token", "")
+    _tour_token_expire = time.time() + int(data.get("expireAfter", 3600)) - 60
+    return _tour_token
+
+
+def _build_context(token: str) -> dict:
+    return {"tourToken": token, "appKey": _APP_KEY, "appSec": _APP_SEC}
 
 
 # ── 数据模型 ──────────────────────────────────────────────────
@@ -104,16 +131,11 @@ class ArtworkMeta:
 
 # ── URL 解析 ──────────────────────────────────────────────────
 def parse_url(url: str) -> tuple[str, str]:
-    """返回 (type_uppercase, id)，兼容新旧两种 URL 格式。
-    旧格式: g2.ltfc.net/view/SU/8d975a5074c7abcd12345678
-    新格式: g2.ltfc.net/view/SU_8d975a5074c7/
-    """
+    """从 URL 提取 (src, id)。格式: g2.ltfc.net/view/SUHA/24位hex"""
     m = _URL_RE.search(url)
     if not m:
         raise ValueError(f"无法识别的 URL: {url}")
-    if m.group("type_new"):
-        return m.group("type_new").upper(), m.group("id_new")
-    return m.group("type_old").upper(), m.group("id_old")
+    return m.group("type").upper(), m.group("id")
 
 
 # ── CDN 签名 ─────────────────────────────────────────────────
@@ -131,11 +153,18 @@ def tile_url(tiles_dir: str, resource_id: str, level: int, col: int, row: int) -
 # ── 元数据获取 ─────────────────────────────────────────────────
 async def fetch_metadata(artwork_type: str, artwork_id: str) -> ArtworkMeta:
     async with httpx.AsyncClient(timeout=15) as client:
+        token = await _get_tour_token(client)
         resp = await client.post(
             f"{API_HOST}/cag2.ResourceService/getResource",
-            json={"id": artwork_id, "src": artwork_type.upper()},
+            json={
+                "id": artwork_id,
+                "src": artwork_type.upper(),
+                "context": _build_context(token),
+            },
             headers={"Referer": "https://g2.ltfc.net/", "Origin": "https://g2.ltfc.net"},
         )
+        if resp.status_code >= 400:
+            raise ValueError(f"上游 API 错误 {resp.status_code}，响应体: {resp.text[:500]}")
         resp.raise_for_status()
         body = resp.json()
         if "data" not in body:
