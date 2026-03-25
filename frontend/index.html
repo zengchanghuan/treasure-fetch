@@ -3,7 +3,10 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>珍宝光 — 高清书画下载</title>
+  <title>墨韵图传 — 高清书画瓦片图一键还原下载工具</title>
+  <meta name="description" content="墨韵图传 (Moyun Fetch) 是一款专业的高清古画、书画瓦片图下载与还原工具。支持突破瓦片图限制，一键下载并拼接完整高清艺术原图。">
+  <meta name="keywords" content="古画下载, 书画下载, 瓦片图还原, 高清古画, 数字艺术下载, Deep Zoom, 图片拼接, 墨韵图传">
+  <meta name="author" content="Moyun Art">
   <style>
     :root {
       --bg: #0f0f0f;
@@ -16,6 +19,7 @@
       --danger: #d44;
       --green: #4a9;
       --radius: 12px;
+      --glow: rgba(201, 169, 110, 0.4);
     }
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
@@ -48,9 +52,12 @@
       color: var(--text);
       font-size: .95rem;
       outline: none;
-      transition: border-color .2s;
+      transition: all .3s ease;
     }
-    .input-group input:focus { border-color: var(--accent-dim); }
+    .input-group input:focus { 
+      border-color: var(--accent); 
+      box-shadow: 0 0 12px var(--glow);
+    }
     .input-group input::placeholder { color: var(--text2); }
 
     .btn {
@@ -174,8 +181,8 @@
 </head>
 <body>
   <header>
-    <h1>珍 宝 光</h1>
-    <p>高清书画瓦片图还原下载工具</p>
+    <h1>墨 韵 图 传</h1>
+    <p>一键还原高清古画，无损下载数字艺术珍藏</p>
   </header>
 
   <main>
@@ -426,5 +433,9 @@
     });
     input.addEventListener('keydown', e => { if (e.key === 'Enter') fetchMeta(); });
   </script>
+  <footer style="text-align: center; padding: 20px; font-size: 0.8rem; color: var(--text2); border-top: 1px solid var(--border); margin-top: auto;">
+    <p>免责声明：本工具仅供学习与艺术交流使用，不得用于商业用途。请尊重并保护数字版权。</p>
+    <p style="margin-top: 5px;">&copy; 2026 Moyun Art. All rights reserved.</p>
+  </footer>
 </body>
 </html>
