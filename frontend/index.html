@@ -1,0 +1,430 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>珍宝光 — 高清书画下载</title>
+  <style>
+    :root {
+      --bg: #0f0f0f;
+      --card: #1a1a1a;
+      --border: #2a2a2a;
+      --text: #e8e8e8;
+      --text2: #999;
+      --accent: #c9a96e;
+      --accent-dim: #8b7345;
+      --danger: #d44;
+      --green: #4a9;
+      --radius: 12px;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, "PingFang SC", "Noto Sans SC", sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    header {
+      width: 100%;
+      padding: 32px 0 16px;
+      text-align: center;
+      border-bottom: 1px solid var(--border);
+    }
+    header h1 { font-size: 1.6rem; font-weight: 500; letter-spacing: 4px; color: var(--accent); }
+    header p { color: var(--text2); font-size: .85rem; margin-top: 6px; }
+    main { width: 100%; max-width: 720px; padding: 32px 20px 80px; }
+
+    /* ── 输入区 ── */
+    .input-group { display: flex; gap: 10px; }
+    .input-group input {
+      flex: 1;
+      padding: 12px 16px;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      color: var(--text);
+      font-size: .95rem;
+      outline: none;
+      transition: border-color .2s;
+    }
+    .input-group input:focus { border-color: var(--accent-dim); }
+    .input-group input::placeholder { color: var(--text2); }
+
+    .btn {
+      padding: 12px 24px;
+      background: var(--accent-dim);
+      color: #fff;
+      border: none;
+      border-radius: var(--radius);
+      font-size: .9rem;
+      cursor: pointer;
+      transition: background .2s;
+      white-space: nowrap;
+    }
+    .btn:hover { background: var(--accent); }
+    .btn:disabled { opacity: .4; cursor: not-allowed; }
+
+    /* ── 错误 ── */
+    .error {
+      margin-top: 16px;
+      padding: 12px 16px;
+      background: rgba(221,68,68,.1);
+      border: 1px solid rgba(221,68,68,.3);
+      border-radius: 8px;
+      color: var(--danger);
+      font-size: .85rem;
+      display: none;
+    }
+    .error.visible { display: block; }
+
+    /* ── 信息卡 ── */
+    .card {
+      margin-top: 24px;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 24px;
+      display: none;
+    }
+    .card.visible { display: block; }
+    .card.done { border-color: var(--green); }
+
+    .meta-header { display: flex; gap: 20px; margin-bottom: 20px; }
+    .meta-thumb {
+      width: 120px;
+      min-height: 160px;
+      border-radius: 8px;
+      overflow: hidden;
+      background: var(--border);
+      flex-shrink: 0;
+    }
+    .meta-thumb img { width: 100%; height: auto; display: block; }
+    .meta-info h2 { font-size: 1.2rem; font-weight: 500; color: var(--accent); margin-bottom: 8px; }
+    .meta-info .detail { font-size: .85rem; color: var(--text2); line-height: 1.7; }
+    .meta-info .tags { margin-top: 8px; display: flex; flex-wrap: wrap; gap: 6px; }
+    .meta-info .tag {
+      padding: 2px 10px;
+      background: var(--border);
+      border-radius: 20px;
+      font-size: .75rem;
+      color: var(--text2);
+    }
+
+    /* ── 下载区 ── */
+    .download-section { margin-top: 20px; }
+    .download-section label { display: block; font-size: .85rem; color: var(--text2); margin-bottom: 8px; }
+    .level-select {
+      width: 100%;
+      padding: 10px 14px;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--text);
+      font-size: .9rem;
+      outline: none;
+      appearance: none;
+      cursor: pointer;
+    }
+    .download-actions { margin-top: 16px; display: flex; gap: 10px; align-items: center; }
+
+    /* ── 进度条 ── */
+    .progress-bar { margin-top: 20px; display: none; }
+    .progress-bar.visible { display: block; }
+    .progress-track {
+      width: 100%;
+      height: 6px;
+      background: var(--border);
+      border-radius: 3px;
+      overflow: hidden;
+    }
+    .progress-fill {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, var(--accent-dim), var(--accent));
+      border-radius: 3px;
+      transition: width .3s ease;
+    }
+    .progress-fill.done-fill { background: var(--green); }
+    .progress-text {
+      font-size: .8rem;
+      color: var(--text2);
+      margin-top: 6px;
+      display: flex;
+      justify-content: space-between;
+    }
+
+    .desc-text {
+      margin-top: 12px;
+      font-size: .82rem;
+      color: var(--text2);
+      line-height: 1.8;
+      border-top: 1px solid var(--border);
+      padding-top: 12px;
+    }
+
+    @media (max-width: 520px) {
+      .input-group { flex-direction: column; }
+      .meta-header { flex-direction: column; align-items: center; text-align: center; }
+      .meta-thumb { width: 80px; min-height: 100px; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>珍 宝 光</h1>
+    <p>高清书画瓦片图还原下载工具</p>
+  </header>
+
+  <main>
+    <div class="input-group">
+      <input id="urlInput" type="text" placeholder="粘贴作品链接 https://g2.ltfc.net/view/..." />
+      <button class="btn" id="fetchBtn" onclick="fetchMeta()">解析</button>
+    </div>
+
+    <div id="errorBox" class="error"></div>
+
+    <div id="metaCard" class="card">
+      <div class="meta-header">
+        <div class="meta-thumb"><img id="thumbImg" alt="缩略图" /></div>
+        <div class="meta-info">
+          <h2 id="artTitle"></h2>
+          <div class="detail">
+            <div>作者：<span id="artAuthor"></span></div>
+            <div>年代：<span id="artAge"></span></div>
+            <div>尺寸：<span id="artSize"></span></div>
+            <div>收藏：<span id="artOwner"></span></div>
+            <div>像素：<span id="artPixels"></span></div>
+          </div>
+          <div class="tags" id="artTags"></div>
+        </div>
+      </div>
+
+      <div id="artDesc" class="desc-text"></div>
+
+      <div class="download-section">
+        <label for="levelSelect">选择下载分辨率</label>
+        <select id="levelSelect" class="level-select"></select>
+        <div class="download-actions">
+          <button class="btn" id="dlBtn" onclick="startDownload()">开始下载</button>
+          <span id="dlStatus" style="font-size:.85rem;color:var(--text2)"></span>
+        </div>
+      </div>
+
+      <div id="progressBar" class="progress-bar">
+        <div class="progress-track">
+          <div id="progressFill" class="progress-fill"></div>
+        </div>
+        <div class="progress-text">
+          <span id="progressMsg">准备中...</span>
+          <span id="progressPct">0%</span>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <script>
+    const URL_RE = /g2\.ltfc\.net\/view\/[A-Z]+\/[a-f0-9]{24}/;
+    let currentUrl = '';
+    let pollStopped = false;
+
+    function showError(msg) {
+      const el = document.getElementById('errorBox');
+      el.textContent = msg;
+      el.classList.add('visible');
+    }
+    function hideError() { document.getElementById('errorBox').classList.remove('visible'); }
+
+    /* ── 解析元数据 ── */
+    async function fetchMeta() {
+      const raw = document.getElementById('urlInput').value.trim();
+      const match = raw.match(/g2\.ltfc\.net\/view\/[A-Z]+\/[a-f0-9]{24}/);
+      if (!match) { showError('未识别到有效链接'); return; }
+      const url = 'https://' + match[0];
+      hideError();
+
+      const btn = document.getElementById('fetchBtn');
+      btn.disabled = true;
+      btn.textContent = '解析中...';
+      resetCard();
+
+      try {
+        const resp = await fetch('/api/metadata', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ url }),
+        });
+        if (!resp.ok) throw new Error((await resp.json()).detail || '请求失败');
+        currentUrl = url;
+        renderMeta(await resp.json());
+      } catch (e) {
+        showError(e.message);
+      } finally {
+        btn.disabled = false;
+        btn.textContent = '解析';
+      }
+    }
+
+    function resetCard() {
+      pollStopped = true;
+      currentMeta = null;
+      const card = document.getElementById('metaCard');
+      card.classList.remove('visible', 'done');
+      document.getElementById('progressBar').classList.remove('visible');
+      document.getElementById('progressFill').style.width = '0%';
+      document.getElementById('progressFill').classList.remove('done-fill');
+      document.getElementById('dlStatus').textContent = '';
+      document.getElementById('dlBtn').disabled = false;
+      document.getElementById('dlBtn').textContent = '开始下载';
+    }
+
+    let currentMeta = null;
+
+    function renderMeta(d) {
+      currentMeta = d;
+      document.getElementById('artTitle').textContent  = d.name;
+      document.getElementById('artAuthor').textContent = d.author;
+      document.getElementById('artAge').textContent    = d.age_detail || d.age;
+      document.getElementById('artSize').textContent   = d.size_cm ? `${d.size_cm} cm` : '—';
+      document.getElementById('artOwner').textContent  = d.owner || '—';
+      const pxLabel = d.layout_type === 'PAGE'
+        ? `${d.width} × ${d.height}（最大页，共 ${d.page_count} 页）`
+        : `${d.width} × ${d.height}`;
+      document.getElementById('artPixels').textContent = pxLabel;
+      document.getElementById('thumbImg').src = d.thumb_url || '';
+
+      const dlBtn = document.getElementById('dlBtn');
+      dlBtn.textContent = d.layout_type === 'PAGE' ? `下载全部（${d.page_count} 页 ZIP）` : '开始下载';
+
+      const desc = document.getElementById('artDesc');
+      desc.textContent = d.desc || '';
+      desc.style.display = d.desc ? 'block' : 'none';
+
+      const tagsEl = document.getElementById('artTags');
+      tagsEl.innerHTML = '';
+      (d.tags || []).forEach(t => {
+        const span = document.createElement('span');
+        span.className = 'tag';
+        span.textContent = t;
+        tagsEl.appendChild(span);
+      });
+
+      const sel = document.getElementById('levelSelect');
+      sel.innerHTML = '';
+      const levels = d.levels || [];
+      levels.forEach(lv => {
+        const opt = document.createElement('option');
+        opt.value = lv.level;
+        opt.textContent = `${lv.label}  —  ${lv.tiles} 块`;
+        sel.appendChild(opt);
+      });
+      if (levels.length) sel.value = levels[levels.length - 1].level;
+
+      document.getElementById('metaCard').classList.add('visible');
+    }
+
+    /* ── 下载 ── */
+    async function startDownload() {
+      if (!currentUrl) return;
+      hideError();
+      const level = parseInt(document.getElementById('levelSelect').value);
+      const btn = document.getElementById('dlBtn');
+      btn.disabled = true;
+      document.getElementById('dlStatus').textContent = '';
+
+      try {
+        const resp = await fetch('/api/download', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ url: currentUrl, level }),
+        });
+        if (!resp.ok) throw new Error((await resp.json()).detail || '启动失败');
+        const { task_id } = await resp.json();
+        pollStopped = false;
+        pollProgress(task_id);
+      } catch (e) {
+        showError(e.message);
+        btn.disabled = false;
+      }
+    }
+
+    /* ── 进度轮询（递归 setTimeout，无竞态） ── */
+    function pollProgress(taskId) {
+      const bar  = document.getElementById('progressBar');
+      const fill = document.getElementById('progressFill');
+      const msg  = document.getElementById('progressMsg');
+      const pct  = document.getElementById('progressPct');
+      bar.classList.add('visible');
+
+      async function tick() {
+        if (pollStopped) return;
+        try {
+          const resp = await fetch(`/api/progress/${taskId}`);
+          if (pollStopped || !resp.ok) return;
+          const d = await resp.json();
+          if (pollStopped) return;
+
+          const p = d.total ? Math.round((d.done / d.total) * 100) : 0;
+
+          if (d.status === 'downloading') {
+            fill.style.width = Math.min(p, 95) + '%';
+            msg.textContent = `下载中 ${d.done}/${d.total}`;
+            pct.textContent = p + '%';
+          } else if (d.status === 'stitching') {
+            fill.style.width = '96%';
+            msg.textContent = '拼接中...';
+            pct.textContent = '96%';
+          } else if (d.status === 'done') {
+            pollStopped = true;
+            fill.style.width = '100%';
+            fill.classList.add('done-fill');
+            msg.textContent = d.message;
+            pct.textContent = '100%';
+            document.getElementById('metaCard').classList.add('done');
+            const ext = (currentMeta && currentMeta.layout_type === 'PAGE') ? '.zip' : '.jpg';
+            const filename = (d.filename || 'artwork') + ext;
+            triggerDownload(taskId, filename);
+            document.getElementById('dlStatus').textContent = '下载完成 ✓';
+            document.getElementById('dlBtn').disabled = false;
+            return;
+          } else if (d.status === 'error') {
+            pollStopped = true;
+            showError(d.message);
+            document.getElementById('dlBtn').disabled = false;
+            return;
+          }
+        } catch { /* 忽略瞬时错误 */ }
+        if (!pollStopped) setTimeout(tick, 500);
+      }
+      setTimeout(tick, 500);
+    }
+
+    function triggerDownload(taskId, filename) {
+      const a = document.createElement('a');
+      a.href = `/api/result/${taskId}`;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+    }
+
+    /* ── 自动识别粘贴 ── */
+    const input = document.getElementById('urlInput');
+    let debounce = null;
+    input.addEventListener('input', () => {
+      clearTimeout(debounce);
+      if (!input.value.trim()) {
+        hideError();
+        resetCard();
+        return;
+      }
+      debounce = setTimeout(() => {
+        if (URL_RE.test(input.value)) fetchMeta();
+      }, 400);
+    });
+    input.addEventListener('keydown', e => { if (e.key === 'Enter') fetchMeta(); });
+  </script>
+</body>
+</html>
