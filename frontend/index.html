@@ -336,6 +336,46 @@
       header h1 { font-size: 1.3rem; letter-spacing: 6px; }
       main { padding: 24px 16px 60px; }
     }
+
+    /* ── 微信浏览器提示横幅 ── */
+    #wechat-banner {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      z-index: 9999;
+      background: linear-gradient(135deg, #07c160 0%, #059652 100%);
+      color: #fff;
+      padding: 12px 16px;
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      box-shadow: 0 2px 12px rgba(0,0,0,.3);
+    }
+    #wechat-banner .wx-icon { font-size: 1.4rem; flex-shrink: 0; margin-top: 2px; }
+    #wechat-banner .wx-body { flex: 1; font-size: .85rem; line-height: 1.6; }
+    #wechat-banner .wx-body strong { font-size: .9rem; display: block; margin-bottom: 3px; }
+    #wechat-banner .wx-steps {
+      margin-top: 6px;
+      font-size: .78rem;
+      opacity: .92;
+      padding-left: 0;
+      list-style: none;
+    }
+    #wechat-banner .wx-steps li { margin-bottom: 2px; }
+    #wechat-banner .wx-close {
+      background: rgba(255,255,255,.25);
+      border: none;
+      color: #fff;
+      border-radius: 50%;
+      width: 26px; height: 26px;
+      font-size: .9rem;
+      cursor: pointer;
+      flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center;
+      touch-action: manipulation;
+    }
+    #wechat-banner .wx-close:hover { background: rgba(255,255,255,.4); }
+    /* 给页面主体留出横幅空间，防止遮挡输入框 */
+    body.has-wechat-banner header { margin-top: 90px; }
   </style>
 </head>
 <body>
@@ -644,6 +684,43 @@
         setTimeout(() => loader.remove(), 450);
       }
     });
+
+    /* ── 微信内置浏览器检测 ── */
+    (function detectWeChat() {
+      const ua = navigator.userAgent || '';
+      const isWeChat = /MicroMessenger/i.test(ua);
+      if (!isWeChat) return;
+
+      const banner = document.createElement('div');
+      banner.id = 'wechat-banner';
+      banner.innerHTML = `
+        <span class="wx-icon">💬</span>
+        <div class="wx-body">
+          <strong>请在系统浏览器中打开，体验更佳</strong>
+          微信内置浏览器不支持文件下载，下载功能将无法正常使用。
+          <ul class="wx-steps">
+            <li>① 点击右上角 <strong>「···」</strong> 菜单</li>
+            <li>② 选择 <strong>「在浏览器中打开」</strong></li>
+          </ul>
+        </div>
+        <button class="wx-close" onclick="dismissWxBanner()" aria-label="关闭">✕</button>
+      `;
+      document.body.insertBefore(banner, document.body.firstChild);
+      document.body.classList.add('has-wechat-banner');
+    })();
+
+    function dismissWxBanner() {
+      const b = document.getElementById('wechat-banner');
+      if (b) {
+        b.style.transition = 'opacity .3s, transform .3s';
+        b.style.opacity = '0';
+        b.style.transform = 'translateY(-100%)';
+        setTimeout(() => {
+          b.remove();
+          document.body.classList.remove('has-wechat-banner');
+        }, 300);
+      }
+    }
   </script>
 
     <div class="how-to-section">
