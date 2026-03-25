@@ -11,11 +11,13 @@ FastAPI 应用入口。
 
 from __future__ import annotations
 
+import time
 import uuid
+from collections import defaultdict
 from pathlib import Path
 from urllib.parse import quote
 
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Request
 from fastapi.responses import FileResponse, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
@@ -29,6 +31,30 @@ from .tile_service import (
 )
 
 app = FastAPI(title="Treasure Fetch — 高清书画下载服务")
+
+
+# ── 简易限流中间件（基于 IP，内存存储） ────────────────────────
+_rate_limits: dict[str, list[float]] = defaultdict(list)
+RATE_LIMIT_WINDOW = 60        # 秒
+RATE_LIMIT_METADATA = 20      # 每分钟最多解析 20 次
+RATE_LIMIT_DOWNLOAD = 5       # 每分钟最多发起 5 次下载
+
+
+def _get_client_ip(request: Request) -> str:
+    forwarded = request.headers.get("x-forwarded-for", "")
+    return forwarded.split(",")[0].strip() if forwarded else (request.client.host if request.client else "unknown")
+
+
+def _check_rate_limit(key: str, max_requests: int):
+    now = time.time()
+    window = _rate_limits[key]
+    _rate_limits[key] = [t for t in window if now - t < RATE_LIMIT_WINDOW]
+    if len(_rate_limits[key]) >= max_requests:
+        raise HTTPException(
+            status_code=429,
+            detail=f"请求过于频繁，请 {RATE_LIMIT_WINDOW} 秒后再试（限制 {max_requests} 次/分钟）",
+        )
+    _rate_limits[key].append(now)
 
 STATIC_DIR = Path(__file__).resolve().parent.parent / "frontend"
 app.mount("/static", StaticFiles(directory=str(STATIC_DIR)), name="static")
@@ -66,7 +92,9 @@ async def index():
 
 
 @app.post("/api/metadata")
-async def get_metadata(req: MetadataRequest):
+async def get_metadata(req: MetadataRequest, request: Request):
+    ip = _get_client_ip(request)
+    _check_rate_limit(f"meta:{ip}", RATE_LIMIT_METADATA)
     try:
         art_type, art_id = parse_url(req.url)
     except ValueError as e:
@@ -98,7 +126,9 @@ async def get_metadata(req: MetadataRequest):
 
 
 @app.post("/api/download", response_model=TaskResponse)
-async def start_download(req: DownloadRequest):
+async def start_download(req: DownloadRequest, request: Request):
+    ip = _get_client_ip(request)
+    _check_rate_limit(f"dl:{ip}", RATE_LIMIT_DOWNLOAD)
     try:
         art_type, art_id = parse_url(req.url)
     except ValueError as e:
