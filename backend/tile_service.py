@@ -30,7 +30,7 @@ API_HOST = "https://api.quanku.art"
 _SECRET_KEY = "ltfcdotnet"
 _TILE_SIZE = 512
 _URL_RE = re.compile(
-    r"g2\.ltfc\.net/view/(?P<type>[A-Z]+)/(?P<id>[a-f0-9]{24})"
+    r"g2\.ltfc\.net/view/(?:(?P<type_old>[A-Z]+)/(?P<id_old>[a-f0-9]{24})|(?P<type_new>[A-Z]+)_(?P<id_new>[a-f0-9]+))"
 )
 
 
@@ -104,11 +104,16 @@ class ArtworkMeta:
 
 # ── URL 解析 ──────────────────────────────────────────────────
 def parse_url(url: str) -> tuple[str, str]:
-    """返回 (type_uppercase, id)，type 保留 URL 原始大写形式供 API src 参数使用。"""
+    """返回 (type_uppercase, id)，兼容新旧两种 URL 格式。
+    旧格式: g2.ltfc.net/view/SU/8d975a5074c7abcd12345678
+    新格式: g2.ltfc.net/view/SU_8d975a5074c7/
+    """
     m = _URL_RE.search(url)
     if not m:
         raise ValueError(f"无法识别的 URL: {url}")
-    return m.group("type").upper(), m.group("id")
+    if m.group("type_new"):
+        return m.group("type_new").upper(), m.group("id_new")
+    return m.group("type_old").upper(), m.group("id_old")
 
 
 # ── CDN 签名 ─────────────────────────────────────────────────
