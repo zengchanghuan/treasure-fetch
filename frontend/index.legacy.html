@@ -1,0 +1,914 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+  <title>墨韵图传 — 高清书画瓦片图一键还原下载工具</title>
+  <meta name="description" content="墨韵图传 (Moyun Fetch) 是一款专业的高清古画、书画瓦片图下载与还原工具。支持突破瓦片图限制，一键下载并拼接完整高清艺术原图。">
+  <meta name="keywords" content="古画下载, 书画下载, 瓦片图还原, 高清古画, 数字艺术下载, Deep Zoom, 图片拼接, 墨韵图传">
+  <meta name="author" content="Moyun Art">
+  <style>
+    :root {
+      --bg: #0f0f0f;
+      --card: #1a1a1a;
+      --border: #2a2a2a;
+      --text: #e8e8e8;
+      --text2: #999;
+      --accent: #c9a96e;
+      --accent-dim: #8b7345;
+      --danger: #d44;
+      --green: #4a9;
+      --radius: 12px;
+      --glow: rgba(201, 169, 110, 0.4);
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    /* ── 首屏加载遮罩 ── */
+    #app-loader {
+      position: fixed;
+      inset: 0;
+      background: var(--bg);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 20px;
+      z-index: 9999;
+      transition: opacity .4s ease;
+    }
+    #app-loader.fade-out { opacity: 0; pointer-events: none; }
+    .loader-title {
+      font-size: 1.4rem;
+      letter-spacing: 6px;
+      color: var(--accent);
+      font-weight: 400;
+      animation: pulse 2s ease-in-out infinite;
+    }
+    .loader-dots {
+      display: flex;
+      gap: 8px;
+    }
+    .loader-dots span {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--accent-dim);
+      animation: bounce 1.2s ease-in-out infinite;
+    }
+    .loader-dots span:nth-child(2) { animation-delay: .2s; }
+    .loader-dots span:nth-child(3) { animation-delay: .4s; }
+    @keyframes bounce {
+      0%, 80%, 100% { transform: translateY(0); opacity: .4; }
+      40%           { transform: translateY(-8px); opacity: 1; }
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: .7; }
+      50%       { opacity: 1; }
+    }
+
+    body {
+      font-family: -apple-system, "PingFang SC", "Noto Sans SC", sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    header {
+      width: 100%;
+      padding: 32px 0 16px;
+      text-align: center;
+      border-bottom: 1px solid var(--border);
+    }
+    header h1 { font-size: 1.6rem; font-weight: 500; letter-spacing: 4px; color: var(--accent); }
+    header p { color: var(--text2); font-size: .85rem; margin-top: 6px; }
+    main { width: 100%; max-width: 720px; padding: 32px 20px 80px; }
+
+    /* ── 输入区 ── */
+    .input-group { display: flex; gap: 10px; }
+    .input-group input {
+      flex: 1;
+      padding: 12px 16px;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      color: var(--text);
+      font-size: 16px; /* iOS Safari 低于 16px 会自动缩放页面 */
+      outline: none;
+      transition: all .3s ease;
+      min-height: 44px; /* iOS 触摸热区最低标准 */
+      -webkit-appearance: none;
+    }
+    .input-group input:focus { 
+      border-color: var(--accent); 
+      box-shadow: 0 0 12px var(--glow);
+    }
+    .input-group input::placeholder { color: var(--text2); }
+
+    .btn {
+      padding: 12px 24px;
+      background: var(--accent-dim);
+      color: #fff;
+      border: none;
+      border-radius: var(--radius);
+      font-size: .9rem;
+      cursor: pointer;
+      transition: background .2s;
+      white-space: nowrap;
+      min-height: 44px; /* iOS 触摸热区最低标准 */
+      min-width: 72px;
+      -webkit-tap-highlight-color: transparent;
+      touch-action: manipulation; /* 消除 300ms 点击延迟 */
+    }
+    .btn:hover { background: var(--accent); }
+    .btn:active { background: var(--accent); opacity: .85; }
+    .btn:disabled { opacity: .4; cursor: not-allowed; }
+
+    /* ── 错误 ── */
+    .error {
+      margin-top: 16px;
+      padding: 14px 16px;
+      background: rgba(221,68,68,.08);
+      border: 1px solid rgba(221,68,68,.25);
+      border-radius: 10px;
+      color: var(--danger);
+      font-size: .85rem;
+      display: none;
+      line-height: 1.7;
+    }
+    .error.visible { display: block; }
+    .error .err-title { font-weight: 600; margin-bottom: 4px; }
+    .error .err-hint  { font-size: .8rem; opacity: .8; margin-top: 6px; }
+
+    /* ── 空状态引导 ── */
+    #emptyState {
+      margin-top: 32px;
+      text-align: center;
+      color: var(--text2);
+      padding: 32px 16px;
+      border: 1px dashed var(--border);
+      border-radius: var(--radius);
+    }
+    #emptyState .empty-icon { font-size: 2.2rem; margin-bottom: 12px; }
+    #emptyState p { font-size: .88rem; line-height: 1.8; margin: 0; }
+
+    /* ── 信息卡 ── */
+    .card {
+      margin-top: 24px;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 24px;
+      display: none;
+    }
+    .card.visible { display: block; }
+    .card.done { border-color: var(--green); }
+
+    .meta-header { display: flex; gap: 20px; margin-bottom: 20px; }
+    .meta-thumb {
+      width: 120px;
+      min-height: 160px;
+      border-radius: 8px;
+      overflow: hidden;
+      background: var(--border);
+      flex-shrink: 0;
+    }
+    .meta-thumb img { width: 100%; height: auto; display: block; }
+    .meta-info h2 { font-size: 1.2rem; font-weight: 500; color: var(--accent); margin-bottom: 8px; }
+    .meta-info .detail { font-size: .85rem; color: var(--text2); line-height: 1.7; }
+    .meta-info .tags { margin-top: 8px; display: flex; flex-wrap: wrap; gap: 6px; }
+    .meta-info .tag {
+      padding: 2px 10px;
+      background: var(--border);
+      border-radius: 20px;
+      font-size: .75rem;
+      color: var(--text2);
+    }
+
+    /* ── 下载区 ── */
+    .download-section { margin-top: 20px; }
+    .download-section label { display: block; font-size: .85rem; color: var(--text2); margin-bottom: 8px; }
+    .level-select {
+      width: 100%;
+      padding: 10px 14px;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--text);
+      font-size: .9rem;
+      outline: none;
+      appearance: none;
+      cursor: pointer;
+    }
+    .download-actions { margin-top: 16px; display: flex; gap: 10px; align-items: center; }
+
+    /* ── 进度条 ── */
+    .progress-bar { margin-top: 20px; display: none; }
+    .progress-bar.visible { display: block; }
+    .progress-track {
+      width: 100%;
+      height: 6px;
+      background: var(--border);
+      border-radius: 3px;
+      overflow: hidden;
+    }
+    .progress-fill {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, var(--accent-dim), var(--accent));
+      border-radius: 3px;
+      transition: width .3s ease;
+    }
+    .progress-fill.done-fill { background: var(--green); }
+    .progress-text {
+      font-size: .8rem;
+      color: var(--text2);
+      margin-top: 6px;
+      display: flex;
+      justify-content: space-between;
+    }
+
+    .desc-text {
+      margin-top: 12px;
+      font-size: .82rem;
+      color: var(--text2);
+      line-height: 1.8;
+      border-top: 1px solid var(--border);
+      padding-top: 12px;
+    }
+
+    /* ── FAQ 区域 ── */
+    .faq-section {
+      margin-top: 48px;
+      padding-top: 32px;
+      border-top: 1px solid var(--border);
+    }
+    .faq-section h2 {
+      font-size: 1.1rem;
+      color: var(--accent);
+      margin-bottom: 20px;
+      font-weight: 500;
+    }
+    .faq-item {
+      margin-bottom: 20px;
+    }
+    .faq-item summary {
+      cursor: pointer;
+      color: var(--text);
+      font-size: .92rem;
+      font-weight: 500;
+      padding: 10px 0;
+      list-style: none;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .faq-item summary::before {
+      content: '▸';
+      color: var(--accent-dim);
+      transition: transform .2s;
+    }
+    .faq-item[open] summary::before {
+      transform: rotate(90deg);
+    }
+    .faq-item p {
+      color: var(--text2);
+      font-size: .85rem;
+      line-height: 1.8;
+      padding: 4px 0 8px 20px;
+    }
+    .faq-item a { color: var(--accent); text-decoration: none; }
+    .faq-item a:hover { text-decoration: underline; }
+    .faq-demo-row {
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 8px;
+    }
+    .faq-demo-hint {
+      font-size: .8rem;
+      color: var(--text2);
+      opacity: .7;
+    }
+
+    /* ── 页脚 ── */
+    footer {
+      margin-top: auto;
+      border-top: 1px solid var(--border);
+      padding: 28px 24px 32px;
+      font-size: .78rem;
+      color: var(--text2);
+    }
+    .footer-trust {
+      display: flex;
+      justify-content: center;
+      flex-wrap: wrap;
+      gap: 20px;
+      margin-bottom: 16px;
+    }
+    .trust-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: .82rem;
+      opacity: .85;
+    }
+    .trust-item .ti-icon { font-size: 1rem; }
+    .footer-divider {
+      width: 40px;
+      height: 1px;
+      background: var(--border);
+      margin: 0 auto 14px;
+    }
+    .footer-disclaimer {
+      text-align: center;
+      line-height: 1.8;
+      opacity: .65;
+    }
+    .footer-disclaimer a { color: var(--accent); text-decoration: none; }
+    .footer-disclaimer a:hover { text-decoration: underline; }
+
+    /* ── Demo 链接区 ── */
+    .demo-links {
+      margin-top: 12px;
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 8px;
+      font-size: 0.85rem;
+      color: var(--text2);
+    }
+    .demo-label { white-space: nowrap; }
+    .demo-btn {
+      padding: 5px 14px;
+      background: transparent;
+      color: var(--accent);
+      border: 1px dashed var(--accent);
+      border-radius: 20px;
+      font-size: .82rem;
+      cursor: pointer;
+      transition: all .2s;
+      min-height: 36px;
+      -webkit-tap-highlight-color: transparent;
+      touch-action: manipulation;
+    }
+    .demo-btn:hover { background: rgba(201,169,110,.12); }
+    .demo-btn:disabled { opacity: .5; cursor: default; }
+    .demo-btn.copied { border-color: #4caf50; color: #4caf50; }
+
+    .how-to-section {
+      margin-top: 36px;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px 24px;
+    }
+    .how-to-section h3 {
+      font-size: .95rem;
+      color: var(--accent);
+      margin-bottom: 14px;
+      font-weight: 500;
+    }
+    .how-to-section ol {
+      color: var(--text2);
+      font-size: .85rem;
+      line-height: 2;
+      padding-left: 20px;
+    }
+    .how-to-section ol li strong { color: var(--text); }
+
+    @media (max-width: 520px) {
+      .input-group { flex-direction: column; }
+      .input-group input { font-size: 16px; } /* 强制防 iOS 缩放 */
+      .btn { width: 100%; justify-content: center; }
+      .meta-header { flex-direction: column; align-items: center; text-align: center; }
+      .meta-thumb { width: 80px; min-height: 100px; }
+      header h1 { font-size: 1.3rem; letter-spacing: 6px; }
+      main { padding: 24px 16px 60px; }
+    }
+
+    /* ── 微信浏览器提示横幅 ── */
+    #wechat-banner {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      z-index: 9999;
+      background: linear-gradient(135deg, #07c160 0%, #059652 100%);
+      color: #fff;
+      padding: 12px 16px;
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      box-shadow: 0 2px 12px rgba(0,0,0,.3);
+    }
+    #wechat-banner .wx-icon { font-size: 1.4rem; flex-shrink: 0; margin-top: 2px; }
+    #wechat-banner .wx-body { flex: 1; font-size: .85rem; line-height: 1.6; }
+    #wechat-banner .wx-body strong { font-size: .9rem; display: block; margin-bottom: 3px; }
+    #wechat-banner .wx-steps {
+      margin-top: 6px;
+      font-size: .78rem;
+      opacity: .92;
+      padding-left: 0;
+      list-style: none;
+    }
+    #wechat-banner .wx-steps li { margin-bottom: 2px; }
+    #wechat-banner .wx-close {
+      background: rgba(255,255,255,.25);
+      border: none;
+      color: #fff;
+      border-radius: 50%;
+      width: 26px; height: 26px;
+      font-size: .9rem;
+      cursor: pointer;
+      flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center;
+      touch-action: manipulation;
+    }
+    #wechat-banner .wx-close:hover { background: rgba(255,255,255,.4); }
+    /* 给页面主体留出横幅空间，防止遮挡输入框 */
+    body.has-wechat-banner header { margin-top: 90px; }
+  </style>
+</head>
+<body>
+  <!-- 首屏加载遮罩 -->
+  <div id="app-loader">
+    <div class="loader-title">墨 韵 图 传</div>
+    <div class="loader-dots"><span></span><span></span><span></span></div>
+  </div>
+
+  <header>
+    <h1>墨 韵 图 传</h1>
+    <p>一键还原高清古画，无损下载数字艺术珍藏</p>
+  </header>
+
+  <main>
+    <div class="input-group">
+      <input id="urlInput" type="text" placeholder="粘贴作品链接 https://g2.ltfc.net/view/..." />
+      <button class="btn" id="fetchBtn" onclick="fetchMeta()">解析</button>
+    </div>
+    
+    <div class="demo-links">
+      <span class="demo-label">没有链接？试试：</span>
+      <button class="demo-btn" onclick="fillDemo(this, 'https://g2.ltfc.net/view/SUHA/647a19401977e748e6a9bfbe')">
+        《行书詹同松磵亭轴》
+      </button>
+    </div>
+
+    <div id="errorBox" class="error"></div>
+
+    <!-- 空状态引导（解析成功后自动隐藏） -->
+    <div id="emptyState">
+      <div class="empty-icon">🖼️</div>
+      <p>粘贴一条 g2.ltfc.net 的书画作品链接，即可解析并下载高清原图<br>
+         <span style="font-size:.8rem;opacity:.65;">链接格式：g2.ltfc.net/view/SUHA/…</span></p>
+    </div>
+
+    <div id="metaCard" class="card">
+      <div class="meta-header">
+        <div class="meta-thumb"><img id="thumbImg" alt="缩略图" /></div>
+        <div class="meta-info">
+          <h2 id="artTitle"></h2>
+          <div class="detail">
+            <div>作者：<span id="artAuthor"></span></div>
+            <div>年代：<span id="artAge"></span></div>
+            <div>尺寸：<span id="artSize"></span></div>
+            <div>收藏：<span id="artOwner"></span></div>
+            <div>像素：<span id="artPixels"></span></div>
+          </div>
+          <div class="tags" id="artTags"></div>
+        </div>
+      </div>
+
+      <div id="artDesc" class="desc-text"></div>
+
+      <div class="download-section">
+        <label for="levelSelect">选择下载分辨率</label>
+        <select id="levelSelect" class="level-select"></select>
+        <div id="quotaInfo" style="display:none;font-size:.78rem;color:var(--text2);margin:6px 0;"></div>
+        <div class="download-actions">
+          <button class="btn" id="dlBtn" onclick="startDownload()">开始下载</button>
+          <span id="dlStatus" style="font-size:.85rem;color:var(--text2)"></span>
+        </div>
+      </div>
+
+      <div id="progressBar" class="progress-bar">
+        <div class="progress-track">
+          <div id="progressFill" class="progress-fill"></div>
+        </div>
+        <div class="progress-text">
+          <span id="progressMsg">准备中...</span>
+          <span id="progressPct">0%</span>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <script>
+    const URL_RE = /g2\.ltfc\.net\/view\/[A-Za-z]+\/[a-f0-9]{24}/;
+    let currentUrl = '';
+    let pollStopped = false;
+
+    /* ── 埋点上报（fire-and-forget） ── */
+    function trackEvent(event, props) {
+      try {
+        const blob = new Blob([JSON.stringify({ event, properties: props || {} })], { type: 'application/json' });
+        navigator.sendBeacon('/api/event', blob);
+      } catch { /* 上报失败不影响主流程 */ }
+    }
+    trackEvent('page_view', { path: location.pathname, referer: document.referrer });
+
+    function friendlyError(raw) {
+      if (!raw) return { title: '出了点小问题', hint: '请稍后再试，或刷新页面重新尝试。' };
+      if (/无法识别|有效链接|格式/.test(raw))
+        return { title: '链接格式不对哦 🤔', hint: '请从 g2.ltfc.net 复制完整的作品页面地址，格式形如 g2.ltfc.net/view/SUHA/…' };
+      if (/429|过于频繁|限制/.test(raw))
+        return { title: '请求太频繁啦，歇一歇 🙏', hint: '每分钟最多可发起 5 次下载请求，请稍等片刻再试。' };
+      if (/无此资源|404|not found/i.test(raw))
+        return { title: '没有找到这件作品 😕', hint: '该作品可能已下架或链接有误，请到原网站确认链接是否仍然有效。' };
+      if (/上游|upstream|API|500|server/i.test(raw))
+        return { title: '数据源暂时开小差了 😓', hint: '上游服务偶有波动，请稍等 1–2 分钟后重试。若持续出现，欢迎反馈给我们。' };
+      if (/网络|network|fetch|connect/i.test(raw))
+        return { title: '网络好像断了 🌐', hint: '请检查你的网络连接后重试。' };
+      return { title: '出了点小问题', hint: raw };
+    }
+
+    function showError(msg) {
+      const el = document.getElementById('errorBox');
+      const { title, hint } = friendlyError(msg);
+      el.innerHTML = `<div class="err-title">⚠️ ${title}</div><div class="err-hint">${hint}</div>`;
+      el.classList.add('visible');
+      document.getElementById('emptyState').style.display = 'none';
+    }
+    function hideError() {
+      document.getElementById('errorBox').classList.remove('visible');
+    }
+
+    /* ── 解析元数据 ── */
+    async function fetchMeta() {
+      const raw = document.getElementById('urlInput').value.trim();
+      const match = raw.match(/g2\.ltfc\.net\/view\/[A-Za-z]+\/[a-f0-9]{24}/);
+      if (!match) { showError('链接格式不对'); return; }
+      const url = 'https://' + match[0];
+      hideError();
+
+      const btn = document.getElementById('fetchBtn');
+      btn.disabled = true;
+      btn.textContent = '解析中...';
+      resetCard();
+
+      try {
+        const resp = await fetch('/api/metadata', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ url }),
+        });
+        if (!resp.ok) throw new Error((await resp.json()).detail || '请求失败');
+        currentUrl = url;
+        renderMeta(await resp.json());
+      } catch (e) {
+        showError(e.message);
+      } finally {
+        btn.disabled = false;
+        btn.textContent = '解析';
+      }
+    }
+
+    function resetCard() {
+      pollStopped = true;
+      currentMeta = null;
+      const card = document.getElementById('metaCard');
+      card.classList.remove('visible', 'done');
+      document.getElementById('emptyState').style.display = '';
+      document.getElementById('progressBar').classList.remove('visible');
+      document.getElementById('progressFill').style.width = '0%';
+      document.getElementById('progressFill').classList.remove('done-fill');
+      document.getElementById('dlStatus').textContent = '';
+      document.getElementById('dlBtn').disabled = false;
+      document.getElementById('dlBtn').textContent = '开始下载';
+    }
+
+    let currentMeta = null;
+
+    function renderMeta(d) {
+      currentMeta = d;
+      document.getElementById('artTitle').textContent  = d.name;
+      document.getElementById('artAuthor').textContent = d.author;
+      document.getElementById('artAge').textContent    = d.age_detail || d.age;
+      document.getElementById('artSize').textContent   = d.size_cm ? `${d.size_cm} cm` : '—';
+      document.getElementById('artOwner').textContent  = d.owner || '—';
+      const pxLabel = d.layout_type === 'PAGE'
+        ? `${d.width} × ${d.height}（最大页，共 ${d.page_count} 页）`
+        : `${d.width} × ${d.height}`;
+      document.getElementById('artPixels').textContent = pxLabel;
+      document.getElementById('thumbImg').src = d.thumb_url || '';
+
+      const dlBtn = document.getElementById('dlBtn');
+      dlBtn.textContent = d.layout_type === 'PAGE' ? `下载全部（${d.page_count} 页 ZIP）` : '开始下载';
+
+      const desc = document.getElementById('artDesc');
+      desc.textContent = d.desc || '';
+      desc.style.display = d.desc ? 'block' : 'none';
+
+      const tagsEl = document.getElementById('artTags');
+      tagsEl.innerHTML = '';
+      (d.tags || []).forEach(t => {
+        const span = document.createElement('span');
+        span.className = 'tag';
+        span.textContent = t;
+        tagsEl.appendChild(span);
+      });
+
+      const sel = document.getElementById('levelSelect');
+      sel.innerHTML = '';
+      const levels = d.levels || [];
+      levels.forEach(lv => {
+        const opt = document.createElement('option');
+        opt.value = lv.level;
+        opt.textContent = `${lv.label}  —  ${lv.tiles} 块`;
+        sel.appendChild(opt);
+      });
+      if (levels.length) sel.value = levels[levels.length - 1].level;
+
+      document.getElementById('metaCard').classList.add('visible');
+      document.getElementById('emptyState').style.display = 'none';
+      fetchQuota();
+    }
+
+    /* ── 额度查询 ── */
+    async function fetchQuota() {
+      try {
+        const resp = await fetch('/api/quota');
+        if (!resp.ok) return;
+        const q = await resp.json();
+        const el = document.getElementById('quotaInfo');
+        if (el) {
+          el.textContent = `今日剩余：标清 ${q.standard_remaining} 次 / 高清 ${q.hd_remaining} 次`;
+          el.style.display = '';
+        }
+      } catch { /* 额度查询失败不影响主流程 */ }
+    }
+
+    /* ── 下载 ── */
+    async function startDownload() {
+      if (!currentUrl) return;
+      hideError();
+      const level = parseInt(document.getElementById('levelSelect').value);
+      const btn = document.getElementById('dlBtn');
+      btn.disabled = true;
+      document.getElementById('dlStatus').textContent = '';
+
+      try {
+        const resp = await fetch('/api/download', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ url: currentUrl, level }),
+        });
+        if (!resp.ok) throw new Error((await resp.json()).detail || '启动失败');
+        const { task_id } = await resp.json();
+        pollStopped = false;
+        pollProgress(task_id);
+      } catch (e) {
+        showError(e.message);
+        btn.disabled = false;
+      }
+    }
+
+    /* ── 进度轮询（递归 setTimeout，无竞态） ── */
+    function pollProgress(taskId) {
+      const bar  = document.getElementById('progressBar');
+      const fill = document.getElementById('progressFill');
+      const msg  = document.getElementById('progressMsg');
+      const pct  = document.getElementById('progressPct');
+      bar.classList.add('visible');
+
+      async function tick() {
+        if (pollStopped) return;
+        try {
+          const resp = await fetch(`/api/progress/${taskId}`);
+          if (pollStopped || !resp.ok) return;
+          const d = await resp.json();
+          if (pollStopped) return;
+
+          const p = d.total ? Math.round((d.done / d.total) * 100) : 0;
+
+          if (d.status === 'downloading') {
+            fill.style.width = Math.min(p, 95) + '%';
+            msg.textContent = `下载中 ${d.done}/${d.total} (请耐心等待，勿关闭页面)`;
+            pct.textContent = p + '%';
+          } else if (d.status === 'stitching') {
+            fill.style.width = '96%';
+            msg.textContent = '图块下载完成，正在合成最终高清大图...';
+            pct.textContent = '96%';
+          } else if (d.status === 'done') {
+            pollStopped = true;
+            fill.style.width = '100%';
+            fill.classList.add('done-fill');
+            msg.textContent = d.message;
+            pct.textContent = '100%';
+            document.getElementById('metaCard').classList.add('done');
+            const ext = (currentMeta && currentMeta.layout_type === 'PAGE') ? '.zip' : '.jpg';
+            const filename = (d.filename || 'artwork') + ext;
+            triggerDownload(taskId, filename);
+            document.getElementById('dlStatus').textContent = '下载完成 ✓';
+            document.getElementById('dlBtn').disabled = false;
+            return;
+          } else if (d.status === 'error') {
+            pollStopped = true;
+            showError(d.message);
+            document.getElementById('dlBtn').disabled = false;
+            return;
+          }
+        } catch { /* 忽略瞬时错误 */ }
+        if (!pollStopped) setTimeout(tick, 500);
+      }
+      setTimeout(tick, 500);
+    }
+
+    function triggerDownload(taskId, filename) {
+      const a = document.createElement('a');
+      a.href = `/api/result/${taskId}`;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+    }
+
+    const DEMO_URL = 'https://g2.ltfc.net/view/SUHA/647a19401977e748e6a9bfbe';
+
+    function fillDemo(btnEl, url) {
+      const input = document.getElementById('urlInput');
+      input.value = url || DEMO_URL;
+      /* 视觉反馈 */
+      if (btnEl) {
+        const orig = btnEl.textContent;
+        btnEl.textContent = '✓ 已填入，解析中…';
+        btnEl.disabled = true;
+        setTimeout(() => { btnEl.textContent = orig; btnEl.disabled = false; }, 2500);
+      }
+      fetchMeta();
+    }
+
+    function copyDemo(btnEl) {
+      navigator.clipboard.writeText(DEMO_URL).then(() => {
+        const orig = btnEl.textContent;
+        btnEl.textContent = '✓ 已复制';
+        btnEl.classList.add('copied');
+        setTimeout(() => { btnEl.textContent = orig; btnEl.classList.remove('copied'); }, 2000);
+      }).catch(() => {
+        /* 降级：选中输入框并写入 */
+        const input = document.getElementById('urlInput');
+        input.value = DEMO_URL;
+        input.select();
+        btnEl.textContent = '已填入输入框';
+        setTimeout(() => { btnEl.textContent = '复制示例链接'; }, 2000);
+      });
+    }
+
+    /* ── URL 参数自动填入（SEO 详情页跳转） ── */
+    (function autoFillFromUrl() {
+      const params = new URLSearchParams(location.search);
+      const prefill = params.get('url');
+      if (prefill && URL_RE.test(prefill)) {
+        document.getElementById('urlInput').value = prefill;
+        setTimeout(fetchMeta, 200);
+      }
+    })();
+
+    /* ── 自动识别粘贴 ── */
+    const input = document.getElementById('urlInput');
+    let debounce = null;
+    input.addEventListener('input', () => {
+      clearTimeout(debounce);
+      if (!input.value.trim()) {
+        hideError();
+        resetCard();
+        return;
+      }
+      debounce = setTimeout(() => {
+        if (URL_RE.test(input.value)) fetchMeta();
+      }, 400);
+    });
+    input.addEventListener('keydown', e => { if (e.key === 'Enter') fetchMeta(); });
+
+    /* ── 首屏加载完成后移除遮罩 ── */
+    window.addEventListener('load', () => {
+      const loader = document.getElementById('app-loader');
+      if (loader) {
+        loader.classList.add('fade-out');
+        setTimeout(() => loader.remove(), 450);
+      }
+    });
+
+    /* ── 微信内置浏览器检测 ── */
+    (function detectWeChat() {
+      const ua = navigator.userAgent || '';
+      const isWeChat = /MicroMessenger/i.test(ua);
+      if (!isWeChat) return;
+
+      const banner = document.createElement('div');
+      banner.id = 'wechat-banner';
+      banner.innerHTML = `
+        <span class="wx-icon">💬</span>
+        <div class="wx-body">
+          <strong>请在系统浏览器中打开，体验更佳</strong>
+          微信内置浏览器不支持文件下载，下载功能将无法正常使用。
+          <ul class="wx-steps">
+            <li>① 点击右上角 <strong>「···」</strong> 菜单</li>
+            <li>② 选择 <strong>「在浏览器中打开」</strong></li>
+          </ul>
+        </div>
+        <button class="wx-close" onclick="dismissWxBanner()" aria-label="关闭">✕</button>
+      `;
+      document.body.insertBefore(banner, document.body.firstChild);
+      document.body.classList.add('has-wechat-banner');
+    })();
+
+    function dismissWxBanner() {
+      const b = document.getElementById('wechat-banner');
+      if (b) {
+        b.style.transition = 'opacity .3s, transform .3s';
+        b.style.opacity = '0';
+        b.style.transform = 'translateY(-100%)';
+        setTimeout(() => {
+          b.remove();
+          document.body.classList.remove('has-wechat-banner');
+        }, 300);
+      }
+    }
+  </script>
+
+    <div class="how-to-section">
+      <h3>如何获取画作链接？</h3>
+      <ol>
+        <li>访问 <strong><a href="https://g2.ltfc.net" target="_blank" style="color: var(--accent);">g2.ltfc.net</a></strong></li>
+        <li>搜索或浏览你感兴趣的书画作品，<strong>点击进入高清浏览页面</strong></li>
+        <li><strong>复制浏览器地址栏中的完整链接</strong>（格式形如 <code style="color:var(--accent);background:var(--border);padding:2px 6px;border-radius:4px;">g2.ltfc.net/view/SUHA/...</code>）</li>
+        <li>回到本页面，粘贴链接并点击「解析」</li>
+      </ol>
+    </div>
+
+    <div class="faq-section">
+      <h2>常见问题</h2>
+
+      <details class="faq-item">
+        <summary>什么是瓦片图 (Deep Zoom Tiles)？</summary>
+        <p>瓦片图是一种将超高分辨率图片切割成无数小方块（通常 512×512 像素）的技术，类似地图软件的缩放。博物馆网站使用这种技术让用户流畅地浏览巨幅画作，但无法直接保存完整原图。墨韵图传能自动下载所有碎片并无损拼接还原为完整的高清大图。</p>
+        <p class="faq-demo-row">
+          没有可用链接？
+          <button class="demo-btn" onclick="copyDemo(this)">复制示例链接</button>
+          <span class="faq-demo-hint">复制后粘贴到上方输入框即可体验</span>
+        </p>
+      </details>
+
+      <details class="faq-item">
+        <summary>支持哪些网站和博物馆？</summary>
+        <p>目前支持 <a href="https://g2.ltfc.net" target="_blank">g2.ltfc.net</a> 收录的所有书画作品，涵盖台北故宫博物院、大都会艺术博物馆、大英博物馆等数十家文博机构的数字化藏品。</p>
+      </details>
+
+      <details class="faq-item">
+        <summary>下载的图片是什么格式？分辨率有多高？</summary>
+        <p>单幅画作输出为 JPEG 格式（quality=95，近无损）。多页册页会自动打包为 ZIP。分辨率取决于原始数据，部分顶级藏品可达数万×数万像素。你可以在解析后自由选择不同的缩放级别（Level），级别越高，分辨率越大，下载耗时也越长。</p>
+      </details>
+
+      <details class="faq-item">
+        <summary>下载速度慢怎么办？</summary>
+        <p>高分辨率画作可能包含数百甚至上千张图块，下载时间从几十秒到几分钟不等。建议选择适中的分辨率级别，并确保网络连接稳定。下载期间请勿关闭或刷新页面。</p>
+      </details>
+
+      <details class="faq-item">
+        <summary>下载的画作可以商用吗？</summary>
+        <p>本工具仅供个人学习与艺术交流使用。画作的版权归原博物馆或收藏机构所有，商业使用前请获取相关机构的正式授权。</p>
+      </details>
+    </div>
+  </main>
+
+  <footer>
+    <!-- 信任标签栏 -->
+    <div class="footer-trust">
+      <div class="trust-item">
+        <span class="ti-icon">🔒</span>
+        <span>不存储任何用户数据</span>
+      </div>
+      <div class="trust-item">
+        <span class="ti-icon">🖼️</span>
+        <span>图片直接推送至您的设备</span>
+      </div>
+      <div class="trust-item">
+        <span class="ti-icon">🌐</span>
+        <span>服务器部署于 AWS 新加坡</span>
+      </div>
+      <div class="trust-item">
+        <span class="ti-icon">📖</span>
+        <span>开源免费，仅供学习使用</span>
+      </div>
+    </div>
+    <div class="footer-divider"></div>
+    <!-- 免责声明 -->
+    <div class="footer-disclaimer">
+      <p>本工具为非营利性学习工具，所下载内容版权归原博物馆及收藏机构所有，请勿用于商业用途。</p>
+      <p style="margin-top:6px;">&copy; 2026 Moyun Art &nbsp;·&nbsp; All rights reserved.</p>
+    </div>
+  </footer>
+</body>
+</html>

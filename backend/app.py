@@ -47,8 +47,12 @@ def _get_client_ip(request: Request) -> str:
     return forwarded.split(",")[0].strip() if forwarded else (request.client.host if request.client else "unknown")
 
 
-STATIC_DIR = Path(__file__).resolve().parent.parent / "frontend"
-app.mount("/static", StaticFiles(directory=str(STATIC_DIR)), name="static")
+_PROJECT_ROOT = Path(__file__).resolve().parent.parent
+_DIST_DIR = _PROJECT_ROOT / "frontend" / "dist"
+_LEGACY_HTML = _PROJECT_ROOT / "frontend" / "index.legacy.html"
+
+if _DIST_DIR.is_dir():
+    app.mount("/assets", StaticFiles(directory=str(_DIST_DIR / "assets")), name="assets")
 
 # ── 内存任务池（轻量级；生产可换 Redis） ─────────────────────
 _tasks: dict[str, dict] = {}
@@ -79,7 +83,9 @@ class ProgressResponse(BaseModel):
 # ── 路由 ─────────────────────────────────────────────────────
 @app.get("/")
 async def index():
-    return FileResponse(str(STATIC_DIR / "index.html"))
+    if _DIST_DIR.is_dir():
+        return FileResponse(str(_DIST_DIR / "index.html"))
+    return FileResponse(str(_LEGACY_HTML))
 
 
 class EventRequest(BaseModel):

@@ -1,0 +1,49 @@
+:root {
+  --bg: #0f0f0f;
+  --card: #1a1a1a;
+  --border: #2a2a2a;
+  --text: #e8e8e8;
+  --text2: #999;
+  --accent: #c9a96e;
+  --accent-dim: #8b7345;
+  --danger: #d44;
+  --green: #4a9;
+  --radius: 12px;
+  --glow: rgba(201, 169, 110, 0.4);
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  font-family: -apple-system, "PingFang SC", "Noto Sans SC", sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+body.has-wechat-banner header { margin-top: 90px; }
+
+.btn {
+  padding: 12px 24px;
+  background: var(--accent-dim);
+  color: #fff;
+  border: none;
+  border-radius: var(--radius);
+  font-size: .9rem;
+  cursor: pointer;
+  transition: background .2s;
+  white-space: nowrap;
+  min-height: 44px;
+  min-width: 72px;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+.btn:hover { background: var(--accent); }
+.btn:active { background: var(--accent); opacity: .85; }
+.btn:disabled { opacity: .4; cursor: not-allowed; }
+
+@media (max-width: 520px) {
+  .btn { width: 100%; justify-content: center; }
+  header h1 { font-size: 1.3rem !important; letter-spacing: 6px !important; }
+  main { padding: 24px 16px 60px !important; }
+}
