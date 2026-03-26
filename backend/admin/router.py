@@ -1,54 +1,103 @@
 """
 管理后台路由。
 
-- GET  /admin        → 仪表盘页面（Basic Auth 保护）
-- GET  /admin/api/*  → 仪表盘数据接口
+- GET  /admin           → 登录页 或 仪表盘（根据 session 判断）
+- POST /admin/login     → 验证密码，设置 cookie
+- GET  /admin/logout    → 清除 cookie
+- GET  /admin/api/*     → 仪表盘数据接口（cookie 鉴权）
 """
 
 from __future__ import annotations
 
+import hashlib
+import hmac
 import secrets
+import time
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
-from fastapi import APIRouter, Depends, HTTPException, status
-from fastapi.responses import HTMLResponse
-from fastapi.security import HTTPBasic, HTTPBasicCredentials
+from fastapi import APIRouter, Cookie, HTTPException, Request, status
+from fastapi.responses import HTMLResponse, RedirectResponse
 
 from backend.analytics import get_tracker
 from backend.config import settings
 
 router = APIRouter(tags=["admin"])
-_security = HTTPBasic()
 
 _DASHBOARD_HTML = Path(__file__).parent / "dashboard.html"
+_LOGIN_HTML = Path(__file__).parent / "login.html"
+
+_SESSION_SECRET = secrets.token_hex(32)
+_SESSION_MAX_AGE = 86400
 
 
-def _verify(creds: HTTPBasicCredentials = Depends(_security)) -> str:
-    correct = secrets.compare_digest(creds.password, settings.admin_password)
-    if not (creds.username == "admin" and correct):
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Unauthorized",
-            headers={"WWW-Authenticate": "Basic"},
-        )
-    return creds.username
+def _sign_token(ts: int) -> str:
+    payload = f"admin:{ts}"
+    sig = hmac.new(_SESSION_SECRET.encode(), payload.encode(), hashlib.sha256).hexdigest()[:24]
+    return f"{payload}:{sig}"
+
+
+def _verify_token(token: str | None) -> bool:
+    if not token:
+        return False
+    try:
+        parts = token.rsplit(":", 1)
+        if len(parts) != 2:
+            return False
+        payload, sig = parts
+        expected = hmac.new(_SESSION_SECRET.encode(), payload.encode(), hashlib.sha256).hexdigest()[:24]
+        if not hmac.compare_digest(sig, expected):
+            return False
+        ts = int(payload.split(":")[1])
+        return (time.time() - ts) < _SESSION_MAX_AGE
+    except (ValueError, IndexError):
+        return False
+
+
+def _require_auth(admin_token: str | None = Cookie(None)):
+    if not _verify_token(admin_token):
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED)
 
 
 def _range(days: int = 7) -> tuple[datetime, datetime]:
-    """返回最近 N 天的时间范围（UTC）。"""
     end = datetime.now(timezone.utc)
     start = end - timedelta(days=days)
     return start, end
 
 
 @router.get("", response_class=HTMLResponse)
-async def dashboard(_user: str = Depends(_verify)):
-    return HTMLResponse(_DASHBOARD_HTML.read_text(encoding="utf-8"))
+async def admin_index(admin_token: str | None = Cookie(None)):
+    if _verify_token(admin_token):
+        return HTMLResponse(_DASHBOARD_HTML.read_text(encoding="utf-8"))
+    return HTMLResponse(_LOGIN_HTML.read_text(encoding="utf-8"))
+
+
+@router.post("/login")
+async def admin_login(request: Request):
+    form = await request.form()
+    password = form.get("password", "")
+    if not secrets.compare_digest(str(password), settings.admin_password):
+        html = _LOGIN_HTML.read_text(encoding="utf-8").replace(
+            "<!--ERROR-->",
+            '<div class="error">密码错误，请重试</div>',
+        )
+        return HTMLResponse(html, status_code=401)
+    token = _sign_token(int(time.time()))
+    resp = RedirectResponse("/admin", status_code=303)
+    resp.set_cookie("admin_token", token, httponly=True, max_age=_SESSION_MAX_AGE, samesite="lax")
+    return resp
+
+
+@router.get("/logout")
+async def admin_logout():
+    resp = RedirectResponse("/admin", status_code=303)
+    resp.delete_cookie("admin_token")
+    return resp
 
 
 @router.get("/api/summary")
-async def summary(days: int = 7, _user: str = Depends(_verify)):
+async def summary(days: int = 7, admin_token: str | None = Cookie(None)):
+    _require_auth(admin_token)
     tracker = get_tracker()
     start, end = _range(days)
     pv = await tracker.count("page_view", start, end)
@@ -68,7 +117,8 @@ async def summary(days: int = 7, _user: str = Depends(_verify)):
 
 
 @router.get("/api/daily")
-async def daily(days: int = 30, event: str | None = None, _user: str = Depends(_verify)):
+async def daily(days: int = 30, event: str | None = None, admin_token: str | None = Cookie(None)):
+    _require_auth(admin_token)
     tracker = get_tracker()
     start, end = _range(days)
     series = await tracker.daily_series(event, start, end)
@@ -76,14 +126,16 @@ async def daily(days: int = 30, event: str | None = None, _user: str = Depends(_
 
 
 @router.get("/api/top_artworks")
-async def top_artworks(days: int = 7, _user: str = Depends(_verify)):
+async def top_artworks(days: int = 7, admin_token: str | None = Cookie(None)):
+    _require_auth(admin_token)
     tracker = get_tracker()
     start, end = _range(days)
     return await tracker.top("download_start", "artwork_id", start, end, limit=20)
 
 
 @router.get("/api/level_distribution")
-async def level_distribution(days: int = 7, _user: str = Depends(_verify)):
+async def level_distribution(days: int = 7, admin_token: str | None = Cookie(None)):
+    _require_auth(admin_token)
     tracker = get_tracker()
     start, end = _range(days)
     return await tracker.top("download_start", "level", start, end, limit=10)
