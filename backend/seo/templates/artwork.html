@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{{ meta.author }}《{{ meta.name }}》高清下载 - 墨韵图传</title>
+  <meta name="description" content="{{ meta.age }} {{ meta.author }}《{{ meta.name }}》，{{ meta.size_cm }}{% if meta.owner %}，{{ meta.owner }}藏{% endif %}。使用墨韵图传一键下载高清无损原图。">
+  <meta name="keywords" content="{{ meta.author }}, {{ meta.name }}, {{ meta.age }}, 高清下载, 书画下载, 墨韵图传">
+  <link rel="canonical" href="{{ canonical_url }}">
+
+  <!-- Open Graph -->
+  <meta property="og:title" content="{{ meta.author }}《{{ meta.name }}》高清下载">
+  <meta property="og:description" content="{{ meta.age }} {{ meta.author }}作品，使用墨韵图传一键下载高清原图">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="{{ canonical_url }}">
+  {% if meta.thumb_url %}<meta property="og:image" content="{{ meta.thumb_url }}">{% endif %}
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="{{ meta.author }}《{{ meta.name }}》高清下载">
+  {% if meta.thumb_url %}<meta name="twitter:image" content="{{ meta.thumb_url }}">{% endif %}
+
+  <!-- JSON-LD -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "VisualArtwork",
+    "name": "{{ meta.name }}",
+    "creator": {
+      "@type": "Person",
+      "name": "{{ meta.author }}"
+    },
+    "dateCreated": "{{ meta.age_detail or meta.age }}",
+    "artMedium": "{{ meta.size_cm }}",
+    {% if meta.owner %}"locationCreated": { "@type": "Place", "name": "{{ meta.owner }}" },{% endif %}
+    {% if meta.thumb_url %}"image": "{{ meta.thumb_url }}",{% endif %}
+    "width": { "@type": "QuantitativeValue", "value": {{ meta.width }}, "unitCode": "E37" },
+    "height": { "@type": "QuantitativeValue", "value": {{ meta.height }}, "unitCode": "E37" },
+    "description": "{{ (meta.desc or '')|e }}"
+  }
+  </script>
+
+  <style>
+    :root {
+      --bg: #0f0f0f; --card: #1a1a1a; --border: #2a2a2a;
+      --text: #e8e0d4; --text2: #8a8278; --accent: #c9a96e;
+      --radius: 10px;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: "Noto Serif SC", "Source Han Serif CN", serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+    .container { max-width: 720px; margin: 0 auto; padding: 40px 24px; }
+    .breadcrumb { font-size: .8rem; color: var(--text2); margin-bottom: 24px; }
+    .breadcrumb a { color: var(--accent); text-decoration: none; }
+    .artwork-card {
+      background: var(--card); border: 1px solid var(--border); border-radius: var(--radius);
+      overflow: hidden;
+    }
+    .thumb-wrap { text-align: center; padding: 24px; background: #111; }
+    .thumb-wrap img { max-width: 100%; max-height: 400px; object-fit: contain; border-radius: 6px; }
+    .info { padding: 24px; }
+    .info h1 { font-size: 1.4rem; margin-bottom: 4px; font-weight: 600; }
+    .info .author { color: var(--accent); font-size: 1rem; margin-bottom: 16px; }
+    .meta-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 20px; }
+    .meta-item .label { font-size: .75rem; color: var(--text2); }
+    .meta-item .value { font-size: .9rem; }
+    .desc { font-size: .85rem; color: var(--text2); line-height: 1.8; margin-bottom: 24px; border-top: 1px solid var(--border); padding-top: 16px; }
+    .cta {
+      display: block; text-align: center; padding: 14px 24px;
+      background: var(--accent); color: #111; border-radius: var(--radius);
+      text-decoration: none; font-size: 1rem; font-weight: 600;
+      transition: opacity .2s;
+    }
+    .cta:hover { opacity: .85; }
+    .footer { text-align: center; font-size: .75rem; color: var(--text2); margin-top: 32px; }
+    .footer a { color: var(--accent); text-decoration: none; }
+    .tags { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 16px; }
+    .tag { padding: 3px 10px; background: var(--border); border-radius: 12px; font-size: .75rem; color: var(--text2); }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="breadcrumb">
+      <a href="/">墨韵图传</a> &gt; 作品详情
+    </div>
+
+    <div class="artwork-card">
+      {% if meta.thumb_url %}
+      <div class="thumb-wrap">
+        <img src="{{ meta.thumb_url }}" alt="{{ meta.author }}《{{ meta.name }}》" loading="lazy">
+      </div>
+      {% endif %}
+
+      <div class="info">
+        <h1>{{ meta.name }}</h1>
+        <div class="author">{{ meta.author }}</div>
+
+        {% if meta.tags %}
+        <div class="tags">
+          {% for tag in meta.tags %}
+          <span class="tag">{{ tag }}</span>
+          {% endfor %}
+        </div>
+        {% endif %}
+
+        <div class="meta-grid">
+          <div class="meta-item">
+            <div class="label">朝代</div>
+            <div class="value">{{ meta.age_detail or meta.age or '—' }}</div>
+          </div>
+          <div class="meta-item">
+            <div class="label">尺寸</div>
+            <div class="value">{{ meta.size_cm or '—' }}</div>
+          </div>
+          <div class="meta-item">
+            <div class="label">分辨率</div>
+            <div class="value">{{ meta.width }} × {{ meta.height }} px</div>
+          </div>
+          <div class="meta-item">
+            <div class="label">收藏机构</div>
+            <div class="value">{{ meta.owner or '—' }}</div>
+          </div>
+        </div>
+
+        {% if meta.desc %}
+        <div class="desc">{{ meta.desc }}</div>
+        {% endif %}
+
+        <a class="cta" href="/?url=https://g2.ltfc.net/view/SUHA/{{ meta.id }}">
+          一键下载高清原图
+        </a>
+      </div>
+    </div>
+
+    <div class="footer">
+      <p>&copy; 2026 <a href="/">墨韵图传</a> · 仅供学习与艺术交流使用</p>
+    </div>
+  </div>
+</body>
+</html>

@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>墨韵图传 · 管理后台</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
+  <style>
+    :root {
+      --bg: #0f0f0f; --card: #1a1a1a; --border: #2a2a2a;
+      --text: #e8e0d4; --text2: #8a8278; --accent: #c9a96e;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: system-ui, sans-serif; background: var(--bg); color: var(--text); padding: 24px; }
+    h1 { font-size: 1.3rem; color: var(--accent); margin-bottom: 24px; font-weight: 500; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 16px; margin-bottom: 32px; }
+    .stat-card {
+      background: var(--card); border: 1px solid var(--border); border-radius: 10px;
+      padding: 16px; text-align: center;
+    }
+    .stat-card .value { font-size: 1.8rem; font-weight: 700; color: var(--accent); }
+    .stat-card .label { font-size: .78rem; color: var(--text2); margin-top: 4px; }
+    .chart-wrap {
+      background: var(--card); border: 1px solid var(--border); border-radius: 10px;
+      padding: 20px; margin-bottom: 24px;
+    }
+    .chart-wrap h2 { font-size: .95rem; color: var(--text2); margin-bottom: 12px; font-weight: 500; }
+    .controls { margin-bottom: 20px; display: flex; gap: 8px; }
+    .controls button {
+      padding: 6px 16px; background: var(--card); border: 1px solid var(--border);
+      color: var(--text2); border-radius: 6px; cursor: pointer; font-size: .8rem;
+    }
+    .controls button.active { border-color: var(--accent); color: var(--accent); }
+    table { width: 100%; border-collapse: collapse; font-size: .85rem; }
+    th, td { padding: 8px 12px; text-align: left; border-bottom: 1px solid var(--border); }
+    th { color: var(--text2); font-weight: 500; }
+    .loading { color: var(--text2); text-align: center; padding: 40px; }
+  </style>
+</head>
+<body>
+  <h1>墨韵图传 · 管理后台</h1>
+
+  <div class="controls">
+    <button class="active" onclick="setDays(7)">7 天</button>
+    <button onclick="setDays(30)">30 天</button>
+    <button onclick="setDays(90)">90 天</button>
+  </div>
+
+  <div class="grid" id="summaryGrid">
+    <div class="loading">加载中…</div>
+  </div>
+
+  <div class="chart-wrap">
+    <h2>每日趋势</h2>
+    <canvas id="dailyChart" height="200"></canvas>
+  </div>
+
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;">
+    <div class="chart-wrap">
+      <h2>热门作品 Top 10</h2>
+      <table id="topTable"><tbody><tr><td class="loading">加载中…</td></tr></tbody></table>
+    </div>
+    <div class="chart-wrap">
+      <h2>分辨率分布</h2>
+      <canvas id="levelChart" height="200"></canvas>
+    </div>
+  </div>
+
+  <script>
+    let currentDays = 7;
+    let dailyChart = null;
+    let levelChart = null;
+    const BASE = '/admin/api';
+
+    async function api(path) {
+      const resp = await fetch(`${BASE}${path}`);
+      return resp.json();
+    }
+
+    function setDays(d) {
+      currentDays = d;
+      document.querySelectorAll('.controls button').forEach(b => b.classList.remove('active'));
+      event.target.classList.add('active');
+      loadAll();
+    }
+
+    async function loadSummary() {
+      const d = await api(`/summary?days=${currentDays}`);
+      document.getElementById('summaryGrid').innerHTML = [
+        { v: d.page_views, l: '页面访问' },
+        { v: d.resolves, l: '解析次数' },
+        { v: d.downloads, l: '下载发起' },
+        { v: d.completes, l: '下载完成' },
+        { v: d.errors, l: '错误次数' },
+        { v: d.error_rate + '%', l: '错误率' },
+      ].map(s => `<div class="stat-card"><div class="value">${s.v}</div><div class="label">${s.l}</div></div>`).join('');
+    }
+
+    async function loadDaily() {
+      const [pvData, dlData] = await Promise.all([
+        api(`/daily?days=${currentDays}&event=page_view`),
+        api(`/daily?days=${currentDays}&event=download_start`),
+      ]);
+      const labels = pvData.series.map(s => s.day);
+      const pvValues = pvData.series.map(s => s.count);
+
+      const dlMap = Object.fromEntries(dlData.series.map(s => [s.day, s.count]));
+      const dlValues = labels.map(d => dlMap[d] || 0);
+
+      const ctx = document.getElementById('dailyChart').getContext('2d');
+      if (dailyChart) dailyChart.destroy();
+      dailyChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels,
+          datasets: [
+            { label: 'PV', data: pvValues, borderColor: '#c9a96e', backgroundColor: 'rgba(201,169,110,.1)', tension: .3, fill: true },
+            { label: '下载', data: dlValues, borderColor: '#5c9ead', backgroundColor: 'rgba(92,158,173,.1)', tension: .3, fill: true },
+          ],
+        },
+        options: {
+          responsive: true,
+          plugins: { legend: { labels: { color: '#8a8278' } } },
+          scales: {
+            x: { ticks: { color: '#8a8278' }, grid: { color: '#2a2a2a' } },
+            y: { ticks: { color: '#8a8278' }, grid: { color: '#2a2a2a' }, beginAtZero: true },
+          },
+        },
+      });
+    }
+
+    async function loadTop() {
+      const data = await api(`/top_artworks?days=${currentDays}`);
+      const tbody = data.slice(0, 10).map((r, i) =>
+        `<tr><td>${i + 1}</td><td>${r.value || '—'}</td><td>${r.count}</td></tr>`
+      ).join('') || '<tr><td colspan="3" style="color:var(--text2)">暂无数据</td></tr>';
+      document.getElementById('topTable').innerHTML = `<thead><tr><th>#</th><th>作品 ID</th><th>次数</th></tr></thead><tbody>${tbody}</tbody>`;
+    }
+
+    async function loadLevels() {
+      const data = await api(`/level_distribution?days=${currentDays}`);
+      const labels = data.map(r => `Level ${r.value}`);
+      const values = data.map(r => r.count);
+      const ctx = document.getElementById('levelChart').getContext('2d');
+      if (levelChart) levelChart.destroy();
+      levelChart = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+          labels,
+          datasets: [{ data: values, backgroundColor: ['#c9a96e','#5c9ead','#d4726a','#7eb77f','#9b8ec2','#e8c170','#6eb5c0','#c27474','#8cc98c','#b8a5d9'] }],
+        },
+        options: {
+          responsive: true,
+          plugins: { legend: { position: 'bottom', labels: { color: '#8a8278' } } },
+        },
+      });
+    }
+
+    async function loadAll() {
+      await Promise.all([loadSummary(), loadDaily(), loadTop(), loadLevels()]);
+    }
+
+    loadAll();
+  </script>
+</body>
+</html>

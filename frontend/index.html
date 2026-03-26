@@ -485,6 +485,7 @@
       <div class="download-section">
         <label for="levelSelect">选择下载分辨率</label>
         <select id="levelSelect" class="level-select"></select>
+        <div id="quotaInfo" style="display:none;font-size:.78rem;color:var(--text2);margin:6px 0;"></div>
         <div class="download-actions">
           <button class="btn" id="dlBtn" onclick="startDownload()">开始下载</button>
           <span id="dlStatus" style="font-size:.85rem;color:var(--text2)"></span>
@@ -507,6 +508,15 @@
     const URL_RE = /g2\.ltfc\.net\/view\/[A-Za-z]+\/[a-f0-9]{24}/;
     let currentUrl = '';
     let pollStopped = false;
+
+    /* ── 埋点上报（fire-and-forget） ── */
+    function trackEvent(event, props) {
+      try {
+        const blob = new Blob([JSON.stringify({ event, properties: props || {} })], { type: 'application/json' });
+        navigator.sendBeacon('/api/event', blob);
+      } catch { /* 上报失败不影响主流程 */ }
+    }
+    trackEvent('page_view', { path: location.pathname, referer: document.referrer });
 
     function friendlyError(raw) {
       if (!raw) return { title: '出了点小问题', hint: '请稍后再试，或刷新页面重新尝试。' };
@@ -622,6 +632,21 @@
 
       document.getElementById('metaCard').classList.add('visible');
       document.getElementById('emptyState').style.display = 'none';
+      fetchQuota();
+    }
+
+    /* ── 额度查询 ── */
+    async function fetchQuota() {
+      try {
+        const resp = await fetch('/api/quota');
+        if (!resp.ok) return;
+        const q = await resp.json();
+        const el = document.getElementById('quotaInfo');
+        if (el) {
+          el.textContent = `今日剩余：标清 ${q.standard_remaining} 次 / 高清 ${q.hd_remaining} 次`;
+          el.style.display = '';
+        }
+      } catch { /* 额度查询失败不影响主流程 */ }
     }
 
     /* ── 下载 ── */
@@ -739,6 +764,16 @@
         setTimeout(() => { btnEl.textContent = '复制示例链接'; }, 2000);
       });
     }
+
+    /* ── URL 参数自动填入（SEO 详情页跳转） ── */
+    (function autoFillFromUrl() {
+      const params = new URLSearchParams(location.search);
+      const prefill = params.get('url');
+      if (prefill && URL_RE.test(prefill)) {
+        document.getElementById('urlInput').value = prefill;
+        setTimeout(fetchMeta, 200);
+      }
+    })();
 
     /* ── 自动识别粘贴 ── */
     const input = document.getElementById('urlInput');
