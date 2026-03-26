@@ -460,7 +460,7 @@
     <!-- 空状态引导（解析成功后自动隐藏） -->
     <div id="emptyState">
       <div class="empty-icon">🖼️</div>
-      <p>粘贴一条中华珍宝馆的作品链接，即可解析并下载高清原图<br>
+      <p>粘贴一条 g2.ltfc.net 的书画作品链接，即可解析并下载高清原图<br>
          <span style="font-size:.8rem;opacity:.65;">链接格式：g2.ltfc.net/view/SUHA/…</span></p>
     </div>
 
@@ -511,13 +511,13 @@
     function friendlyError(raw) {
       if (!raw) return { title: '出了点小问题', hint: '请稍后再试，或刷新页面重新尝试。' };
       if (/无法识别|有效链接|格式/.test(raw))
-        return { title: '链接格式不对哦 🤔', hint: '请从中华珍宝馆 (g2.ltfc.net) 复制完整的作品页面地址，格式形如 g2.ltfc.net/view/SUHA/…' };
+        return { title: '链接格式不对哦 🤔', hint: '请从 g2.ltfc.net 复制完整的作品页面地址，格式形如 g2.ltfc.net/view/SUHA/…' };
       if (/429|过于频繁|限制/.test(raw))
         return { title: '请求太频繁啦，歇一歇 🙏', hint: '每分钟最多可发起 5 次下载请求，请稍等片刻再试。' };
       if (/无此资源|404|not found/i.test(raw))
-        return { title: '没有找到这件作品 😕', hint: '该作品可能已下架或链接有误，请到中华珍宝馆确认链接仍然有效。' };
+        return { title: '没有找到这件作品 😕', hint: '该作品可能已下架或链接有误，请到原网站确认链接是否仍然有效。' };
       if (/上游|upstream|API|500|server/i.test(raw))
-        return { title: '数据源暂时开小差了 😓', hint: '中华珍宝馆的服务偶有波动，请稍等 1–2 分钟后重试。若持续出现，欢迎反馈给我们。' };
+        return { title: '数据源暂时开小差了 😓', hint: '上游服务偶有波动，请稍等 1–2 分钟后重试。若持续出现，欢迎反馈给我们。' };
       if (/网络|network|fetch|connect/i.test(raw))
         return { title: '网络好像断了 🌐', hint: '请检查你的网络连接后重试。' };
       return { title: '出了点小问题', hint: raw };
@@ -806,7 +806,7 @@
     <div class="how-to-section">
       <h3>如何获取画作链接？</h3>
       <ol>
-        <li>访问 <strong><a href="https://g2.ltfc.net" target="_blank" style="color: var(--accent);">中华珍宝馆 (g2.ltfc.net)</a></strong></li>
+        <li>访问 <strong><a href="https://g2.ltfc.net" target="_blank" style="color: var(--accent);">g2.ltfc.net</a></strong></li>
         <li>搜索或浏览你感兴趣的书画作品，<strong>点击进入高清浏览页面</strong></li>
         <li><strong>复制浏览器地址栏中的完整链接</strong>（格式形如 <code style="color:var(--accent);background:var(--border);padding:2px 6px;border-radius:4px;">g2.ltfc.net/view/SUHA/...</code>）</li>
         <li>回到本页面，粘贴链接并点击「解析」</li>
@@ -828,7 +828,7 @@
 
       <details class="faq-item">
         <summary>支持哪些网站和博物馆？</summary>
-        <p>目前支持 <a href="https://g2.ltfc.net" target="_blank">中华珍宝馆 (g2.ltfc.net)</a> 收录的所有书画作品，涵盖台北故宫博物院、大都会艺术博物馆、大英博物馆等数十家文博机构的数字化藏品。</p>
+        <p>目前支持 <a href="https://g2.ltfc.net" target="_blank">g2.ltfc.net</a> 收录的所有书画作品，涵盖台北故宫博物院、大都会艺术博物馆、大英博物馆等数十家文博机构的数字化藏品。</p>
       </details>
 
       <details class="faq-item">
@@ -872,7 +872,7 @@
     <!-- 免责声明 -->
     <div class="footer-disclaimer">
       <p>本工具为非营利性学习工具，所下载内容版权归原博物馆及收藏机构所有，请勿用于商业用途。</p>
-      <p style="margin-top:6px;">数据来源：<a href="https://g2.ltfc.net" target="_blank" rel="noopener">中华珍宝馆 (g2.ltfc.net)</a> &nbsp;·&nbsp; &copy; 2026 Moyun Art · All rights reserved.</p>
+      <p style="margin-top:6px;">数据来源：<a href="https://g2.ltfc.net" target="_blank" rel="noopener">g2.ltfc.net</a> &nbsp;·&nbsp; &copy; 2026 Moyun Art · All rights reserved.</p>
     </div>
   </footer>
 </body>
