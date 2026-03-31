@@ -1,11 +1,10 @@
 <template>
   <div class="how-to-section">
-    <h3>如何获取画作链接？</h3>
+    <h3>三步获取高清原图</h3>
     <ol>
-      <li>访问 <strong><a href="https://g2.ltfc.net" target="_blank">g2.ltfc.net</a></strong></li>
-      <li>搜索或浏览你感兴趣的书画作品，<strong>点击进入高清浏览页面</strong></li>
-      <li><strong>复制浏览器地址栏中的完整链接</strong>（格式形如 <code>g2.ltfc.net/view/SUHA/...</code>）</li>
-      <li>回到本页面，粘贴链接并点击「解析」</li>
+      <li>访问 <strong><a href="https://g2.ltfc.net" target="_blank">g2.ltfc.net</a></strong>，搜索你喜欢的书画作品</li>
+      <li>进入作品详情页后，<strong>复制浏览器地址栏中的链接</strong></li>
+      <li>粘贴到上方输入框，<strong>点击「解析」即可保存完整高清原图</strong></li>
     </ol>
   </div>
 </template>

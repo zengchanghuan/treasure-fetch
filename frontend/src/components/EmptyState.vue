@@ -2,8 +2,8 @@
   <div v-if="visible" class="empty-state">
     <div class="empty-icon">🖼️</div>
     <p>
-      粘贴一条 g2.ltfc.net 的书画作品链接，即可解析并下载高清原图<br>
-      <span class="hint">链接格式：g2.ltfc.net/view/SUHA/…</span>
+      粘贴一条 g2.ltfc.net 的书画作品链接，即可一键保存完整高清原图<br>
+      <span class="hint">在 g2.ltfc.net 找到喜欢的作品，复制浏览器地址栏链接粘贴到这里</span>
     </p>
   </div>
 </template>

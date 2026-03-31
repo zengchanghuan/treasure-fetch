@@ -4,7 +4,7 @@
       <h1>一 轴</h1>
       <span class="brand-en">Yizhou</span>
     </div>
-    <p>高清书画瓦片图 · 一键还原下载</p>
+    <p>博物馆级高清书画 · 一键保存到你的设备</p>
   </header>
 </template>
 

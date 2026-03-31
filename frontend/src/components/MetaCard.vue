@@ -22,7 +22,7 @@
     <p v-if="meta.desc" class="desc-text">{{ meta.desc }}</p>
 
     <div class="download-section">
-      <label for="levelSelect">选择还原分辨率</label>
+      <label for="levelSelect">选择图片尺寸</label>
       <select id="levelSelect" v-model="selectedLevel" class="level-select">
         <option
           v-for="lv in (meta.levels || [])"
@@ -30,7 +30,7 @@
           :value="lv.level"
           :disabled="isHdLevel(lv.level) && quota && quota.hd_remaining <= 0"
         >
-          {{ lv.label }}  —  {{ lv.tiles }} 块{{ isHdLevel(lv.level) ? '  · Pro' : '' }}
+          {{ formatLevel(lv) }}{{ isHdLevel(lv.level) ? '  · Pro' : '' }}
         </option>
       </select>
 
@@ -113,6 +113,18 @@ function isHdLevel(level) {
   if (!props.meta?.levels?.length) return false
   const maxLevel = props.meta.levels[props.meta.levels.length - 1].level
   return level >= maxLevel - 1
+}
+
+function formatLevel(lv) {
+  const levels = props.meta?.levels || []
+  const maxLevel = levels.length ? levels[levels.length - 1].level : lv.level
+  const diff = maxLevel - lv.level
+  const megapx = Math.round(lv.width * lv.height / 1e6)
+  const label = diff === 0 ? '最高清（原始尺寸）'
+    : diff === 1 ? '高清'
+    : diff === 2 ? '标清'
+    : '预览'
+  return `${label}  ${lv.width}×${lv.height}${megapx >= 1 ? '（约 ' + megapx + ' 百万像素）' : ''}`
 }
 
 async function loadQuota() {
