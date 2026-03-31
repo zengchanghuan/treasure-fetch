@@ -55,7 +55,7 @@ export function triggerFileDownload(taskId, filename) {
 export function friendlyError(raw) {
   if (!raw) return { title: '出了点小问题', hint: '请稍后再试，或刷新页面重新尝试。' }
   if (/无法识别|有效链接|格式/.test(raw))
-    return { title: '链接格式不对哦 🤔', hint: '请从 g2.ltfc.net 复制完整的作品页面地址，格式形如 g2.ltfc.net/view/SUHA/…' }
+    return { title: '链接格式不对哦 🤔', hint: '请复制作品详情页的完整浏览器地址，确认包含作品 ID 后重试。' }
   if (/今日免费下载额度已用完|今日.*额度/.test(raw))
     return { title: '今日免费工具次数已用完', hint: '免费版每日可还原 3 次，明日 0 点自动重置。升级 Pro 可获得每日 30 次额度。', upgrade: true }
   if (/今日高清下载额度已用完|高清.*额度/.test(raw))

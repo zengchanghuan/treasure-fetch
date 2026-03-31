@@ -13,7 +13,7 @@
 
     <details class="faq-item">
       <summary>支持哪些博物馆的藏品？</summary>
-      <p>目前支持 <a href="https://g2.ltfc.net" target="_blank">g2.ltfc.net</a> 收录的全部书画作品，包括台北故宫博物院、大都会艺术博物馆、大英博物馆、故宫博物院等数十家机构的数字化藏品，总量超过数万件。</p>
+      <p>目前支持多个数字文博平台收录的书画作品，包括台北故宫博物院、大都会艺术博物馆、大英博物馆、故宫博物院等数十家机构的数字化藏品，总量超过数万件。</p>
     </details>
 
     <details class="faq-item">

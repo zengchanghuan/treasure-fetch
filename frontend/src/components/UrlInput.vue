@@ -4,7 +4,7 @@
       ref="inputEl"
       v-model="inputValue"
       type="text"
-      placeholder="粘贴作品链接 https://g2.ltfc.net/view/..."
+      placeholder="粘贴书画作品页面链接…"
       @keydown.enter="$emit('submit')"
       @input="onInput"
     />
