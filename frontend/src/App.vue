@@ -20,10 +20,12 @@
     />
 
     <HowToSection />
+    <EmailSubscribe />
     <div id="pricing">
       <PricingPlans />
     </div>
     <FaqSection />
+    <ChangelogSection />
   </main>
 
   <AppFooter />
@@ -43,8 +45,10 @@ import ErrorBox from './components/ErrorBox.vue'
 import EmptyState from './components/EmptyState.vue'
 import MetaCard from './components/MetaCard.vue'
 import HowToSection from './components/HowToSection.vue'
+import EmailSubscribe from './components/EmailSubscribe.vue'
 import PricingPlans from './components/PricingPlans.vue'
 import FaqSection from './components/FaqSection.vue'
+import ChangelogSection from './components/ChangelogSection.vue'
 import AppFooter from './components/AppFooter.vue'
 
 trackEvent('page_view', { path: location.pathname, referer: document.referrer })

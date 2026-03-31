@@ -16,9 +16,16 @@
       <p>本站不存储任何图片，仅提供技术还原工具。所下载内容版权归原博物馆及收藏机构所有，请勿将其用于商业目的，商业使用前请取得权利方的正式授权。</p>
     </div>
 
+    <!-- FixEpub 导流 -->
+    <div class="sister-tool">
+      爱读书？试试我的另一个工具 👉
+      <a href="https://fixepub.com" target="_blank" rel="noopener">FixEpub.com</a>
+      — AI 电子书翻译与排版引擎
+    </div>
+
     <div class="footer-divider" />
     <div class="footer-disclaimer">
-      <p class="copyright">&copy; 2026 Moyun Art &nbsp;·&nbsp; All rights reserved.</p>
+      <p class="copyright">&copy; 2026 Yizhou Art &nbsp;·&nbsp; All rights reserved.</p>
     </div>
   </footer>
 </template>
@@ -55,4 +62,17 @@ footer {
 .footer-disclaimer a { color: var(--accent); text-decoration: none; }
 .footer-disclaimer a:hover { text-decoration: underline; }
 .copyright { margin-top: 0; font-size: .75rem; }
+.sister-tool {
+  text-align: center;
+  font-size: .8rem;
+  color: var(--text2);
+  margin-bottom: 14px;
+  line-height: 1.8;
+}
+.sister-tool a {
+  color: var(--accent);
+  font-weight: 600;
+  text-decoration: none;
+}
+.sister-tool a:hover { text-decoration: underline; }
 </style>

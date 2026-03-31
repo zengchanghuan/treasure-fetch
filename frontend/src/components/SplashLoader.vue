@@ -1,7 +1,7 @@
 <template>
   <Transition name="fade">
     <div v-if="visible" class="loader">
-      <div class="loader-title">墨 韵 图 传</div>
+      <div class="loader-title">一 轴</div>
       <div class="loader-dots"><span /><span /><span /></div>
     </div>
   </Transition>

@@ -9,6 +9,7 @@ FastAPI 应用入口。
   GET  /api/result/{task}    → 获取最终图片
   POST /api/event            → 前端埋点上报
   GET  /api/quota            → 查询 IP 剩余额度
+  POST /api/subscribe        → 邮件订阅
 """
 
 from __future__ import annotations
@@ -207,6 +208,21 @@ async def start_download(req: DownloadRequest, request: Request):
 
     asyncio.create_task(_run())
     return TaskResponse(task_id=task_id)
+
+
+class SubscribeRequest(BaseModel):
+    email: str
+
+
+@app.post("/api/subscribe")
+async def subscribe(req: SubscribeRequest, request: Request):
+    """邮件订阅：存入 analytics 事件表，后续可导出或接入 Resend/Brevo。"""
+    email = req.email.strip().lower()
+    if not email or "@" not in email or len(email) > 254:
+        raise HTTPException(status_code=400, detail="邮箱格式不正确")
+    ip = _get_client_ip(request)
+    await get_tracker().track("email_subscribe", {"email": email, "ip": ip})
+    return {"ok": True}
 
 
 @app.get("/api/quota")
