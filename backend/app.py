@@ -20,7 +20,8 @@ import uuid
 from pathlib import Path
 from urllib.parse import quote
 
-from fastapi import FastAPI, HTTPException, Request
+import aiosqlite
+from fastapi import FastAPI, File, Form, HTTPException, Request, UploadFile
 from fastapi.responses import FileResponse, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
@@ -208,6 +209,63 @@ async def start_download(req: DownloadRequest, request: Request):
 
     asyncio.create_task(_run())
     return TaskResponse(task_id=task_id)
+
+
+_FEEDBACK_IMAGE_DIR = _PROJECT_ROOT / "data" / "feedback-images"
+
+
+async def _ensure_feedback_db():
+    """确保 feedback 表已创建。"""
+    db_path = settings.db_abs_path
+    async with aiosqlite.connect(str(db_path)) as db:
+        await db.execute("""
+            CREATE TABLE IF NOT EXISTS feedback (
+                id        INTEGER PRIMARY KEY AUTOINCREMENT,
+                ts        REAL    NOT NULL,
+                ip        TEXT    NOT NULL DEFAULT '',
+                text      TEXT    NOT NULL,
+                image     TEXT    NOT NULL DEFAULT ''
+            )
+        """)
+        await db.commit()
+
+
+@app.post("/api/feedback")
+async def submit_feedback(
+    request: Request,
+    text: str = Form(...),
+    image: UploadFile | None = File(None),
+):
+    """接收用户反馈（文字 + 可选图片）。"""
+    if not text.strip():
+        raise HTTPException(status_code=400, detail="反馈内容不能为空")
+    if len(text) > 2000:
+        raise HTTPException(status_code=400, detail="反馈内容过长")
+
+    image_filename = ""
+    if image and image.filename:
+        content_type = image.content_type or ""
+        if not content_type.startswith("image/"):
+            raise HTTPException(status_code=400, detail="只支持图片文件")
+        data = await image.read(5 * 1024 * 1024 + 1)
+        if len(data) > 5 * 1024 * 1024:
+            raise HTTPException(status_code=400, detail="图片不能超过 5 MB")
+        _FEEDBACK_IMAGE_DIR.mkdir(parents=True, exist_ok=True)
+        ext = Path(image.filename).suffix.lower() or ".jpg"
+        image_filename = uuid.uuid4().hex + ext
+        (_FEEDBACK_IMAGE_DIR / image_filename).write_bytes(data)
+
+    ip = _get_client_ip(request)
+    await _ensure_feedback_db()
+    async with aiosqlite.connect(str(settings.db_abs_path)) as db:
+        await db.execute(
+            "INSERT INTO feedback (ts, ip, text, image) VALUES (?, ?, ?, ?)",
+            (time.time(), ip, text.strip(), image_filename),
+        )
+        await db.commit()
+
+    await get_tracker().track("feedback_submit", {"ip": ip, "has_image": bool(image_filename)})
+    return {"ok": True}
 
 
 class SubscribeRequest(BaseModel):

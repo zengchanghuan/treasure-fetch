@@ -16,11 +16,15 @@ import time
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
+import aiosqlite
 from fastapi import APIRouter, Cookie, HTTPException, Request, status
-from fastapi.responses import HTMLResponse, RedirectResponse
+from fastapi.responses import FileResponse, HTMLResponse, RedirectResponse
 
 from backend.analytics import get_tracker
 from backend.config import settings
+
+_PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
+_FEEDBACK_IMAGE_DIR = _PROJECT_ROOT / "data" / "feedback-images"
 
 router = APIRouter(tags=["admin"])
 
@@ -139,3 +143,42 @@ async def level_distribution(days: int = 7, admin_token: str | None = Cookie(Non
     tracker = get_tracker()
     start, end = _range(days)
     return await tracker.top("download_start", "level", start, end, limit=10)
+
+
+@router.get("/api/feedback")
+async def list_feedback(limit: int = 50, admin_token: str | None = Cookie(None)):
+    """返回最新用户反馈列表。"""
+    _require_auth(admin_token)
+    db_path = settings.db_abs_path
+    async with aiosqlite.connect(str(db_path)) as db:
+        db.row_factory = aiosqlite.Row
+        try:
+            cur = await db.execute(
+                "SELECT id, ts, ip, text, image FROM feedback ORDER BY ts DESC LIMIT ?",
+                (limit,),
+            )
+            rows = await cur.fetchall()
+        except Exception:
+            return []
+    return [
+        {
+            "id": r["id"],
+            "ts": r["ts"],
+            "ip": r["ip"],
+            "text": r["text"],
+            "image": r["image"],
+        }
+        for r in rows
+    ]
+
+
+@router.get("/feedback-image/{filename}")
+async def feedback_image(filename: str, admin_token: str | None = Cookie(None)):
+    """鉴权后提供反馈图片。"""
+    _require_auth(admin_token)
+    if ".." in filename or "/" in filename:
+        raise HTTPException(status_code=400)
+    path = _FEEDBACK_IMAGE_DIR / filename
+    if not path.exists():
+        raise HTTPException(status_code=404)
+    return FileResponse(str(path))

@@ -39,6 +39,31 @@
     th, td { padding: 8px 12px; text-align: left; border-bottom: 1px solid var(--border); }
     th { color: var(--text2); font-weight: 500; }
     .loading { color: var(--text2); text-align: center; padding: 40px; }
+
+    /* 反馈样式 */
+    .feedback-section { margin-top: 24px; }
+    .feedback-section h2 { font-size: .95rem; color: var(--text2); margin-bottom: 16px; font-weight: 500; }
+    .feedback-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 16px; }
+    .feedback-card {
+      background: var(--card); border: 1px solid var(--border); border-radius: 10px;
+      padding: 16px; display: flex; flex-direction: column; gap: 10px;
+    }
+    .feedback-meta { font-size: .72rem; color: var(--text2); display: flex; justify-content: space-between; }
+    .feedback-text { font-size: .85rem; color: var(--text); line-height: 1.7; white-space: pre-wrap; word-break: break-word; }
+    .feedback-img {
+      width: 100%; border-radius: 8px; object-fit: contain;
+      max-height: 240px; cursor: pointer; transition: opacity .2s;
+    }
+    .feedback-img:hover { opacity: .85; }
+    .feedback-empty { color: var(--text2); text-align: center; padding: 32px; font-size: .85rem; }
+
+    /* 图片灯箱 */
+    #lightbox {
+      display: none; position: fixed; inset: 0; background: rgba(0,0,0,.85);
+      z-index: 9999; align-items: center; justify-content: center; cursor: zoom-out;
+    }
+    #lightbox.open { display: flex; }
+    #lightbox img { max-width: 90vw; max-height: 90vh; border-radius: 8px; box-shadow: 0 0 40px rgba(0,0,0,.5); }
   </style>
 </head>
 <body>
@@ -71,6 +96,18 @@
       <h2>分辨率分布</h2>
       <canvas id="levelChart" height="200"></canvas>
     </div>
+  </div>
+
+  <div class="feedback-section chart-wrap">
+    <h2>用户反馈 <span id="feedbackCount" style="font-size:.75rem;opacity:.6;"></span></h2>
+    <div class="feedback-grid" id="feedbackGrid">
+      <div class="loading">加载中…</div>
+    </div>
+  </div>
+
+  <!-- 图片灯箱 -->
+  <div id="lightbox" onclick="closeLightbox()">
+    <img id="lightboxImg" src="" alt="" />
   </div>
 
   <script>
@@ -163,8 +200,47 @@
       });
     }
 
+    async function loadFeedback() {
+      const data = await api('/feedback?limit=50');
+      const grid = document.getElementById('feedbackGrid');
+      const countEl = document.getElementById('feedbackCount');
+      if (!data.length) {
+        grid.innerHTML = '<div class="feedback-empty">暂无反馈</div>';
+        countEl.textContent = '';
+        return;
+      }
+      countEl.textContent = `共 ${data.length} 条`;
+      grid.innerHTML = data.map(f => {
+        const date = new Date(f.ts * 1000).toLocaleString('zh-CN', { hour12: false });
+        const imgHtml = f.image
+          ? `<img class="feedback-img" src="/admin/feedback-image/${f.image}" alt="反馈截图" loading="lazy" onclick="openLightbox(this.src)">`
+          : '';
+        return `
+          <div class="feedback-card">
+            <div class="feedback-meta">
+              <span>${date}</span>
+              <span>${f.ip}</span>
+            </div>
+            <div class="feedback-text">${escHtml(f.text)}</div>
+            ${imgHtml}
+          </div>`;
+      }).join('');
+    }
+
+    function escHtml(s) {
+      return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    }
+
+    function openLightbox(src) {
+      document.getElementById('lightboxImg').src = src;
+      document.getElementById('lightbox').classList.add('open');
+    }
+    function closeLightbox() {
+      document.getElementById('lightbox').classList.remove('open');
+    }
+
     async function loadAll() {
-      await Promise.all([loadSummary(), loadDaily(), loadTop(), loadLevels()]);
+      await Promise.all([loadSummary(), loadDaily(), loadTop(), loadLevels(), loadFeedback()]);
     }
 
     loadAll();
