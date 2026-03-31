@@ -21,9 +21,6 @@
 
     <HowToSection />
     <EmailSubscribe />
-    <div id="pricing">
-      <PricingPlans />
-    </div>
     <FaqSection />
     <FeedbackForm />
     <ChangelogSection />
@@ -47,7 +44,6 @@ import EmptyState from './components/EmptyState.vue'
 import MetaCard from './components/MetaCard.vue'
 import HowToSection from './components/HowToSection.vue'
 import EmailSubscribe from './components/EmailSubscribe.vue'
-import PricingPlans from './components/PricingPlans.vue'
 import FaqSection from './components/FaqSection.vue'
 import FeedbackForm from './components/FeedbackForm.vue'
 import ChangelogSection from './components/ChangelogSection.vue'

@@ -22,7 +22,7 @@ const entries = [
     version: 'v0.5 — 商业化基础 & SPA 重构',
     items: [
       '前端迁移至 <strong>Vue 3 + Vite</strong>，拆分 12 个组件，首屏 Gzip 仅 36 KB',
-      '新增 <strong>工具套餐定价</strong>：免费版 / Pro 版分层，收费点改为"工具使用次数"',
+      '新增工具使用限额机制，防止服务滥用',
       '接入 <strong>Cloudflare CDN</strong>，大陆访问延迟从 ~200ms 降至 ~50ms',
       '扩充种子作品库至 <strong>25 件</strong>（齐白石、吴昌硕、张大千、弘一等）',
       '新增显著免责声明：本站不存储任何图片，仅提供技术还原工具',

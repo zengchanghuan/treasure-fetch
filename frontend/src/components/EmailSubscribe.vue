@@ -4,7 +4,7 @@
       <div class="subscribe-icon">📬</div>
       <div class="subscribe-copy">
         <strong>订阅功能更新</strong>
-        <span>Pro 上线、新功能发布时第一时间通知，不发广告</span>
+        <span>新功能发布时第一时间通知，不发广告</span>
       </div>
       <form class="subscribe-form" @submit.prevent="submit">
         <input
