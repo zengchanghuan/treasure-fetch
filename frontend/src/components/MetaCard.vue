@@ -22,17 +22,42 @@
     <p v-if="meta.desc" class="desc-text">{{ meta.desc }}</p>
 
     <div class="download-section">
-      <label for="levelSelect">选择下载分辨率</label>
+      <label for="levelSelect">选择还原分辨率</label>
       <select id="levelSelect" v-model="selectedLevel" class="level-select">
-        <option v-for="lv in (meta.levels || [])" :key="lv.level" :value="lv.level">
-          {{ lv.label }}  —  {{ lv.tiles }} 块
+        <option
+          v-for="lv in (meta.levels || [])"
+          :key="lv.level"
+          :value="lv.level"
+          :disabled="isHdLevel(lv.level) && quota && quota.hd_remaining <= 0"
+        >
+          {{ lv.label }}  —  {{ lv.tiles }} 块{{ isHdLevel(lv.level) ? '  · Pro' : '' }}
         </option>
       </select>
-      <div v-if="quota" class="quota-info">
-        今日剩余：标清 {{ quota.standard_remaining }} 次 / 高清 {{ quota.hd_remaining }} 次
+
+      <!-- 工具使用额度 -->
+      <div v-if="quota" class="quota-bar">
+        <div class="quota-item">
+          <span class="quota-label">今日还原次数</span>
+          <span class="quota-value" :class="{ warn: quota.standard_remaining <= 1 }">
+            剩余 {{ quota.standard_remaining }} 次
+          </span>
+        </div>
+        <div class="quota-item quota-hd">
+          <span class="quota-label">高清额度 <span class="pro-tag">Pro</span></span>
+          <span class="quota-value" :class="{ warn: quota.hd_remaining <= 0 }">
+            剩余 {{ quota.hd_remaining }} 次
+          </span>
+        </div>
       </div>
+
+      <!-- 高清限制提示 -->
+      <div v-if="isHdLevel(selectedLevel) && quota && quota.hd_remaining <= 0" class="upgrade-hint">
+        高清还原需要 Pro 套餐，或选择较低分辨率继续使用
+        <a href="#pricing" class="upgrade-link">查看套餐 →</a>
+      </div>
+
       <div class="download-actions">
-        <button class="btn" :disabled="downloading" @click="$emit('download', selectedLevel)">
+        <button class="btn" :disabled="downloading || (isHdLevel(selectedLevel) && quota && quota.hd_remaining <= 0)" @click="$emit('download', selectedLevel)">
           {{ downloadBtnText }}
         </button>
         <span class="dl-status">{{ statusText }}</span>
@@ -79,10 +104,16 @@ const pixelLabel = computed(() => {
 })
 
 const downloadBtnText = computed(() => {
-  if (props.downloading) return '下载中...'
-  if (props.meta?.layout_type === 'PAGE') return `下载全部（${props.meta.page_count} 页 ZIP）`
-  return '开始下载'
+  if (props.downloading) return '还原中...'
+  if (props.meta?.layout_type === 'PAGE') return `还原全部（${props.meta.page_count} 页 ZIP）`
+  return '开始还原'
 })
+
+function isHdLevel(level) {
+  if (!props.meta?.levels?.length) return false
+  const maxLevel = props.meta.levels[props.meta.levels.length - 1].level
+  return level >= maxLevel - 1
+}
 
 async function loadQuota() {
   try { quota.value = await apiFetchQuota() } catch { /* noop */ }
@@ -116,7 +147,34 @@ async function loadQuota() {
   border: 1px solid var(--border); border-radius: 8px;
   color: var(--text); font-size: .9rem; outline: none; appearance: none; cursor: pointer;
 }
-.quota-info { font-size: .78rem; color: var(--text2); margin: 6px 0; }
+.quota-bar {
+  display: flex; gap: 12px; margin: 10px 0 6px;
+  padding: 10px 14px;
+  background: rgba(255,255,255,.03);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+}
+.quota-item { display: flex; flex-direction: column; gap: 3px; flex: 1; }
+.quota-hd { border-left: 1px solid var(--border); padding-left: 12px; }
+.quota-label { font-size: .72rem; color: var(--text2); display: flex; align-items: center; gap: 5px; }
+.quota-value { font-size: .82rem; color: var(--text); font-weight: 500; }
+.quota-value.warn { color: var(--danger); }
+.pro-tag {
+  font-size: .65rem; background: rgba(201,169,110,.2);
+  color: var(--accent); padding: 1px 5px; border-radius: 4px;
+  font-weight: 600; letter-spacing: .5px;
+}
+.upgrade-hint {
+  font-size: .78rem; color: var(--text2);
+  background: rgba(201,169,110,.06);
+  border: 1px solid rgba(201,169,110,.2);
+  border-radius: 8px; padding: 8px 12px; margin: 6px 0;
+  display: flex; align-items: center; justify-content: space-between; gap: 8px;
+}
+.upgrade-link {
+  color: var(--accent); text-decoration: none; white-space: nowrap; font-size: .78rem;
+}
+.upgrade-link:hover { text-decoration: underline; }
 .download-actions { margin-top: 16px; display: flex; gap: 10px; align-items: center; }
 .dl-status { font-size: .85rem; color: var(--text2); }
 @media (max-width: 520px) {

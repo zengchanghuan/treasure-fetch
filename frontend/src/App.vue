@@ -20,6 +20,9 @@
     />
 
     <HowToSection />
+    <div id="pricing">
+      <PricingPlans />
+    </div>
     <FaqSection />
   </main>
 
@@ -40,6 +43,7 @@ import ErrorBox from './components/ErrorBox.vue'
 import EmptyState from './components/EmptyState.vue'
 import MetaCard from './components/MetaCard.vue'
 import HowToSection from './components/HowToSection.vue'
+import PricingPlans from './components/PricingPlans.vue'
 import FaqSection from './components/FaqSection.vue'
 import AppFooter from './components/AppFooter.vue'
 
