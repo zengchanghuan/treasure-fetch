@@ -27,8 +27,8 @@ const pct = computed(() => {
 })
 
 const label = computed(() => {
-  if (props.status === 'downloading') return `下载中 ${props.done}/${props.total} (请耐心等待，勿关闭页面)`
-  if (props.status === 'stitching') return '数据获取完成，正在合成高清原图，稍等片刻…'
+  if (props.status === 'downloading') return `处理中 ${props.done}/${props.total} (请耐心等待，勿关闭页面)`
+  if (props.status === 'stitching') return '资料整理完成，正在生成研究副本，稍等片刻…'
   if (props.status === 'done') return props.message || '完成'
   return '准备中...'
 })

@@ -15,6 +15,7 @@ from fastapi import APIRouter, Request
 from fastapi.responses import HTMLResponse, Response
 from jinja2 import Environment, FileSystemLoader
 
+from backend.source_policy import build_official_url, ensure_allowed_artwork
 from backend.tile_service import fetch_metadata
 
 router = APIRouter(tags=["seo"])
@@ -40,12 +41,17 @@ async def artwork_detail(artwork_id: str, request: Request):
     """
     try:
         meta = await fetch_metadata("SUHA", artwork_id)
+        ensure_allowed_artwork(meta)
     except Exception:
         return HTMLResponse("<h1>作品未找到</h1><p><a href='/'>返回首页</a></p>", status_code=404)
 
     canonical = str(request.url_for("artwork_detail", artwork_id=artwork_id))
     tmpl = _jinja.get_template("artwork.html")
-    html = tmpl.render(meta=meta, canonical_url=canonical)
+    html = tmpl.render(
+        meta=meta,
+        canonical_url=canonical,
+        official_url=build_official_url("SUHA", artwork_id),
+    )
     return HTMLResponse(html, headers={"Cache-Control": "public, max-age=86400"})
 
 

@@ -1,10 +1,10 @@
 <template>
   <div class="how-to-section">
-    <h3>三步获取高清原图</h3>
+    <h3>三步查看作品资料</h3>
     <ol>
-      <li>在数字文博平台搜索你喜欢的书画作品，<strong>点击进入作品详情页</strong></li>
+      <li>在台北故宫博物院公开馆藏页面找到感兴趣的书画作品，<strong>点击进入作品详情页</strong></li>
       <li><strong>复制浏览器地址栏中的完整链接</strong></li>
-      <li>粘贴到上方输入框，<strong>点击「解析」即可保存完整高清原图</strong></li>
+      <li>粘贴到上方输入框，<strong>即可查看作者、尺寸、馆藏与作品简介等资料</strong></li>
     </ol>
   </div>
 </template>

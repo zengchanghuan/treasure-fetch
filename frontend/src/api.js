@@ -49,9 +49,11 @@ export function triggerFileDownload(taskId, filename) {
 export function friendlyError(raw) {
   if (!raw) return { title: '出了点小问题', hint: '请稍后再试，或刷新页面重新尝试。' }
   if (/无法识别|有效链接|格式/.test(raw))
-    return { title: '链接格式不对哦 🤔', hint: '请复制作品详情页的完整浏览器地址，确认包含作品 ID 后重试。' }
-  if (/今日.*额度已用完|额度已用完/.test(raw))
-    return { title: '今日使用次数已达上限', hint: '明日 0 点自动重置，请稍后再试。' }
+    return { title: '链接格式不对哦 🤔', hint: '请复制台北故宫博物院作品详情页的完整浏览器地址，确认包含作品 ID 后重试。' }
+  if (/当前仅支持台北故宫博物院公开馆藏页面/.test(raw))
+    return { title: '当前来源暂不支持', hint: '目前仅支持台北故宫博物院公开馆藏页面，请更换链接后再试。' }
+  if (/今日.*次数已用完|额度已用完/.test(raw))
+    return { title: '今日处理次数已达上限', hint: '明日 0 点自动重置，请稍后再试。' }
   if (/过于频繁|请.*秒后再试/.test(raw))
     return { title: '操作太频繁，稍等片刻 🙏', hint: raw }
   if (/无此资源|404|not found/i.test(raw))

@@ -22,7 +22,12 @@
     <p v-if="meta.desc" class="desc-text">{{ meta.desc }}</p>
 
     <div class="download-section">
-      <label for="levelSelect">选择图片尺寸</label>
+      <div v-if="officialUrl" class="official-link-wrap">
+        <a :href="officialUrl" class="official-link" target="_blank" rel="noopener">查看馆藏原页面</a>
+        <span class="official-hint">如需进一步使用，请以馆方页面说明与规则为准</span>
+      </div>
+
+      <label for="levelSelect">选择研究副本尺寸</label>
       <select id="levelSelect" v-model="selectedLevel" class="level-select">
         <option v-for="lv in (meta.levels || [])" :key="lv.level" :value="lv.level">
           {{ formatLevel(lv) }}
@@ -52,6 +57,7 @@ import DownloadProgress from './DownloadProgress.vue'
 
 const props = defineProps({
   meta: Object,
+  officialUrl: { type: String, default: '' },
   downloading: Boolean,
   isDone: Boolean,
   statusText: { type: String, default: '' },
@@ -74,9 +80,9 @@ const pixelLabel = computed(() => {
 })
 
 const downloadBtnText = computed(() => {
-  if (props.downloading) return '还原中...'
-  if (props.meta?.layout_type === 'PAGE') return `还原全部（${props.meta.page_count} 页 ZIP）`
-  return '开始还原'
+  if (props.downloading) return '处理中...'
+  if (props.meta?.layout_type === 'PAGE') return `导出研究副本（${props.meta.page_count} 页 ZIP）`
+  return '导出研究副本'
 })
 
 function formatLevel(lv) {
@@ -84,9 +90,9 @@ function formatLevel(lv) {
   const maxLevel = levels.length ? levels[levels.length - 1].level : lv.level
   const diff = maxLevel - lv.level
   const megapx = Math.round(lv.width * lv.height / 1e6)
-  const label = diff === 0 ? '最高清（原始尺寸）'
-    : diff === 1 ? '高清'
-    : diff === 2 ? '标清'
+  const label = diff === 0 ? '完整尺寸'
+    : diff === 1 ? '较高尺寸'
+    : diff === 2 ? '标准尺寸'
     : '预览'
   return `${label}  ${lv.width}×${lv.height}${megapx >= 1 ? '（约 ' + megapx + ' 百万像素）' : ''}`
 }
@@ -114,6 +120,27 @@ function formatLevel(lv) {
   border-top: 1px solid var(--border); padding-top: 12px;
 }
 .download-section { margin-top: 20px; }
+.official-link-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 14px;
+}
+.official-link {
+  display: inline-flex;
+  width: fit-content;
+  align-items: center;
+  justify-content: center;
+  padding: 9px 14px;
+  background: rgba(201,169,110,.1);
+  border: 1px solid rgba(201,169,110,.28);
+  border-radius: 8px;
+  color: var(--accent);
+  text-decoration: none;
+  font-size: .84rem;
+}
+.official-link:hover { text-decoration: underline; }
+.official-hint { font-size: .78rem; color: var(--text2); }
 .download-section label { display: block; font-size: .85rem; color: var(--text2); margin-bottom: 8px; }
 .level-select {
   width: 100%; padding: 10px 14px; background: var(--bg);

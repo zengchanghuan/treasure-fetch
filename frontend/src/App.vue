@@ -12,6 +12,7 @@
     <MetaCard
       v-if="meta"
       :meta="meta"
+      :official-url="currentUrl"
       :downloading="downloading"
       :is-done="isDone"
       :status-text="statusText"
@@ -123,7 +124,7 @@ function pollTask(taskId) {
         pollStopped = true
         isDone.value = true
         downloading.value = false
-        statusText.value = '下载完成 ✓'
+        statusText.value = '处理完成 ✓'
         const ext = meta.value?.layout_type === 'PAGE' ? '.zip' : '.jpg'
         triggerFileDownload(taskId, (d.filename || 'artwork') + ext)
         trackEvent('download_done', { url: currentUrl })

@@ -4,7 +4,7 @@
       <span class="wx-icon">💬</span>
       <div class="wx-body">
         <strong>请在系统浏览器中打开，体验更佳</strong>
-        微信内置浏览器不支持文件下载，下载功能将无法正常使用。
+        微信内置浏览器对外链打开和文件处理支持有限，部分功能可能无法正常使用。
         <ul class="wx-steps">
           <li>① 点击右上角 <strong>「···」</strong> 菜单</li>
           <li>② 选择 <strong>「在浏览器中打开」</strong></li>

@@ -19,13 +19,13 @@
 const entries = [
   {
     date: '2026-03-26',
-    version: 'v0.5 — 商业化基础 & SPA 重构',
+    version: 'v0.5 — SPA 重构与范围收缩',
     items: [
       '前端迁移至 <strong>Vue 3 + Vite</strong>，拆分 12 个组件，首屏 Gzip 仅 36 KB',
-      '新增工具使用限额机制，防止服务滥用',
+      '站点定位调整为 <strong>资料整理与研究辅助</strong>，收缩公开表达与入口设计',
       '接入 <strong>Cloudflare CDN</strong>，大陆访问延迟从 ~200ms 降至 ~50ms',
-      '扩充种子作品库至 <strong>25 件</strong>（齐白石、吴昌硕、张大千、弘一等）',
-      '新增显著免责声明：本站不存储任何图片，仅提供技术还原工具',
+      'SEO 种子作品收缩为已确认的台北故宫馆藏样本',
+      '新增显著免责声明，并统一馆方规则优先的使用说明',
     ],
   },
   {
@@ -36,14 +36,14 @@ const entries = [
       '新增 <strong>SEO 详情页</strong>（/artwork/:id），含 JSON-LD 结构化数据',
       '动态 sitemap.xml 与 robots.txt',
       '前端埋点（sendBeacon）+ 管理后台数据看板（Chart.js）',
-      '限流模块：内存滑窗 + SQLite 持久化，支持每日下载额度',
+      '限流模块：内存滑窗 + SQLite 持久化，支持每日请求控制',
     ],
   },
   {
     date: '2026-03-25',
     version: 'v0.3 — 用户体验优化',
     items: [
-      '逆向工程上游 API 认证（tourToken + appKey/appSec），解析成功率 100%',
+      '提升公开馆藏页面的兼容性与解析稳定性',
       '新增微信内置浏览器检测横幅，引导跳出到系统浏览器',
       '友好错误提示（替换技术报错）',
       '首屏加载遮罩、Demo 示例链接、移动端触摸热区优化',
@@ -55,15 +55,15 @@ const entries = [
     items: [
       '部署至 AWS 新加坡，域名 moyun.art，HTTPS 证书自动续期',
       'GitHub Actions Push-to-Deploy，推送即部署',
-      '支持 COLL / PAGE / PIC 三种布局类型，多页册页打包 ZIP',
+      '支持多种作品布局的数据整理流程',
     ],
   },
   {
     date: '2026-03-24',
     version: 'v0.1 — 首次发布',
     items: [
-      '核心功能上线：瓦片图解析 → 并发下载 → 无损拼接',
-      '单页前端，FastAPI 后端，Pillow 图片处理',
+      '核心能力上线：作品页面解析、资料整理与图像处理',
+      '单页前端，FastAPI 后端，Pillow 图像处理',
     ],
   },
 ]

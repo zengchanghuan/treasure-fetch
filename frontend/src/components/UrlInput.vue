@@ -4,7 +4,7 @@
       ref="inputEl"
       v-model="inputValue"
       type="text"
-      placeholder="粘贴书画作品页面链接…"
+      placeholder="粘贴台北故宫博物院作品页面链接…"
       @keydown.enter="$emit('submit')"
       @input="onInput"
     />

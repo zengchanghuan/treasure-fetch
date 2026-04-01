@@ -3,7 +3,7 @@
     <div class="footer-trust">
       <div class="trust-item"><span class="ti-icon">🔒</span><span>不存储任何用户数据</span></div>
       <div class="trust-item"><span class="ti-icon">🚫</span><span>本站不存储任何图片</span></div>
-      <div class="trust-item"><span class="ti-icon">🖼️</span><span>图片直接推送至您的设备</span></div>
+      <div class="trust-item"><span class="ti-icon">🖼️</span><span>优先整理作品资料与馆藏信息</span></div>
       <div class="trust-item"><span class="ti-icon">🌐</span><span>服务器部署于 AWS 新加坡</span></div>
       <div class="trust-item"><span class="ti-icon">📖</span><span>仅供个人学习研究使用</span></div>
     </div>
@@ -13,7 +13,7 @@
     <div class="legal-notice">
       <p class="legal-title">⚠️ 免责声明</p>
       <p>本工具仅供个人学习研究使用，不得用于商业用途。用户需自行承担内容使用的法律责任。</p>
-      <p>本站不存储任何图片，仅提供技术还原工具。所下载内容版权归原博物馆及收藏机构所有，请勿将其用于商业目的，商业使用前请取得权利方的正式授权。</p>
+      <p>当前版本聚焦台北故宫博物院公开馆藏页面，提供资料整理与研究辅助。作品内容及相关权利归原机构或权利人所有；如需进一步使用，请以馆方规则与正式授权要求为准。</p>
     </div>
 
     <!-- FixEpub 导流 -->

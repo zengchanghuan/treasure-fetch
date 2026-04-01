@@ -4,9 +4,9 @@ FastAPI 应用入口。
 路由：
   GET  /                     → 前端页面
   POST /api/metadata         → 根据 URL 获取作品元数据
-  POST /api/download         → 发起下载任务
-  GET  /api/progress/{task}  → 轮询下载进度
-  GET  /api/result/{task}    → 获取最终图片
+  POST /api/download         → 发起研究导出任务
+  GET  /api/progress/{task}  → 轮询处理进度
+  GET  /api/result/{task}    → 获取最终文件
   POST /api/event            → 前端埋点上报
   GET  /api/quota            → 查询 IP 剩余额度
   POST /api/subscribe        → 邮件订阅
@@ -31,6 +31,7 @@ from .analytics import get_tracker
 from .config import settings
 from .rate_limiter import get_limiter
 from .seo import seo_router
+from .source_policy import ensure_allowed_artwork
 from .tile_service import (
     ArtworkMeta,
     DownloadProgress,
@@ -39,7 +40,7 @@ from .tile_service import (
     parse_url,
 )
 
-app = FastAPI(title="Treasure Fetch — 高清书画下载服务")
+app = FastAPI(title="一轴 Yizhou — 书画资料整理与研究辅助")
 app.include_router(admin_router, prefix="/admin")
 app.include_router(seo_router)
 
@@ -51,7 +52,7 @@ def _get_client_ip(request: Request) -> str:
 
 _PROJECT_ROOT = Path(__file__).resolve().parent.parent
 _DIST_DIR = _PROJECT_ROOT / "frontend" / "dist"
-_LEGACY_HTML = _PROJECT_ROOT / "frontend" / "index.legacy.html"
+_FRONTEND_INDEX = _PROJECT_ROOT / "frontend" / "index.html"
 
 if _DIST_DIR.is_dir():
     app.mount("/assets", StaticFiles(directory=str(_DIST_DIR / "assets")), name="assets")
@@ -87,7 +88,7 @@ class ProgressResponse(BaseModel):
 async def index():
     if _DIST_DIR.is_dir():
         return FileResponse(str(_DIST_DIR / "index.html"))
-    return FileResponse(str(_LEGACY_HTML))
+    return FileResponse(str(_FRONTEND_INDEX))
 
 
 class EventRequest(BaseModel):
@@ -121,6 +122,18 @@ async def get_metadata(req: MetadataRequest, request: Request):
     except Exception as e:
         await get_tracker().track("metadata_resolve", {"ip": ip, "artwork_id": "", "success": False, "error": str(e)})
         raise HTTPException(status_code=502, detail=f"上游 API 错误: {e}")
+
+    try:
+        ensure_allowed_artwork(meta)
+    except ValueError as e:
+        await get_tracker().track("policy_block", {
+            "ip": ip,
+            "artwork_id": art_id,
+            "success": False,
+            "reason": "owner_mismatch",
+            "owner": meta.owner,
+        })
+        raise HTTPException(status_code=403, detail=str(e))
 
     await get_tracker().track("metadata_resolve", {
         "ip": ip, "artwork_id": art_id, "artwork_name": meta.name, "success": True,
@@ -157,7 +170,7 @@ async def start_download(req: DownloadRequest, request: Request):
 
     daily_result = await limiter.check(f"daily_dl:{ip}", settings.daily_download_standard, 86400)
     if not daily_result.allowed:
-        raise HTTPException(status_code=429, detail="今日免费下载额度已用完，明日 0 点重置")
+        raise HTTPException(status_code=429, detail="今日研究导出次数已用完，明日 0 点重置")
 
     try:
         art_type, art_id = parse_url(req.url)
@@ -169,6 +182,18 @@ async def start_download(req: DownloadRequest, request: Request):
     except Exception as e:
         raise HTTPException(status_code=502, detail=f"上游 API 错误: {e}")
 
+    try:
+        ensure_allowed_artwork(meta)
+    except ValueError as e:
+        await get_tracker().track("policy_block", {
+            "ip": ip,
+            "artwork_id": art_id,
+            "success": False,
+            "reason": "owner_mismatch",
+            "owner": meta.owner,
+        })
+        raise HTTPException(status_code=403, detail=str(e))
+
     if req.level < meta.min_level or req.level > meta.max_level:
         raise HTTPException(status_code=400, detail="无效的缩放级别")
 
@@ -176,7 +201,7 @@ async def start_download(req: DownloadRequest, request: Request):
     if is_hd:
         hd_result = await limiter.check(f"daily_hd:{ip}", settings.daily_download_hd, 86400)
         if not hd_result.allowed:
-            raise HTTPException(status_code=429, detail="今日高清下载额度已用完，请选择较低分辨率或明日再试")
+            raise HTTPException(status_code=429, detail="今日高分辨率导出次数已用完，请选择较低分辨率或明日再试")
 
     task_id = uuid.uuid4().hex[:12]
     progress = DownloadProgress()

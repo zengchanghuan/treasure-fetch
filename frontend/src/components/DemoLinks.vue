@@ -1,6 +1,6 @@
 <template>
   <div class="demo-links">
-    <span class="demo-label">没有链接？试试：</span>
+    <span class="demo-label">没有链接？试试台北故宫示例：</span>
     <button class="demo-btn" :disabled="filling" @click="fill">
       {{ filling ? '✓ 已填入，解析中…' : '《行书詹同松磵亭轴》' }}
     </button>

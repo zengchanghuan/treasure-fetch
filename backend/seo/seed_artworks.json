@@ -1,27 +1,6 @@
 [
-  {"id": "608986c399d7365038944746", "name": "书法对联", "author": "何绍基"},
-  {"id": "608a61a8aa7c385c8d943ba4", "name": "对联条幅", "author": "启功"},
-  {"id": "608a6198aa7c385c8d942769", "name": "篆书五言联", "author": "吴昌硕"},
-  {"id": "608a61880af29f5c808a413f", "name": "篆书五言联", "author": "齐白石"},
-  {"id": "608a61acaa7c385c8d94412c", "name": "石鼓文集字联", "author": "吴昌硕"},
-  {"id": "608a61a7aa7c385c8d943990", "name": "书法对联", "author": "曾国藩"},
-  {"id": "608a61adaa7c385c8d944227", "name": "篆书对联", "author": "弘一"},
-  {"id": "608a61a7aa7c385c8d94399a", "name": "对联", "author": "于右任"},
-  {"id": "608a61a8aa7c385c8d943b4c", "name": "书法字对", "author": "严复"},
   {"id": "608a619daa7c385c8d942e1d", "name": "草书七言联", "author": "于右任"},
-  {"id": "608a6199aa7c385c8d9428c0", "name": "书法对联", "author": "陈大羽"},
-  {"id": "608a61a7aa7c385c8d943a37", "name": "行书七言对联", "author": "张大千"},
   {"id": "60e6dbd76f14610fea6edcbf", "name": "平定回疆图", "author": "郎世宁"},
-  {"id": "608a61acaa7c385c8d94404b", "name": "天下名山图册", "author": "佚名清人"},
-  {"id": "608a6198aa7c385c8d9427e8", "name": "行书七言轴", "author": "吴昌硕"},
-  {"id": "608a61adaa7c385c8d94420b", "name": "对联", "author": "弘一"},
-  {"id": "608a61a7aa7c385c8d943986", "name": "对联", "author": "沈尹默"},
-  {"id": "655acac46ae39b250b7eef00", "name": "敦颐爱莲图", "author": "刘俊"},
   {"id": "608a619eaa7c385c8d942e52", "name": "行书联", "author": "张照"},
-  {"id": "647a19401977e748e6a9bfbe", "name": "行书詹同松磵亭轴", "author": "黄宾虹"},
-  {"id": "608a61a2aa7c385c8d943507", "name": "敦煌绘画-41", "author": "佚名唐人"},
-  {"id": "608a61a2aa7c385c8d943509", "name": "敦煌绘画-43", "author": "佚名唐人"},
-  {"id": "608a61a2aa7c385c8d943501", "name": "敦煌绘画-31", "author": "佚名唐人"},
-  {"id": "608a61a2aa7c385c8d94350f", "name": "敦煌绘画-44", "author": "佚名唐人"},
-  {"id": "608a61a2aa7c385c8d943503", "name": "敦煌绘画-35", "author": "佚名唐人"}
+  {"id": "647a19401977e748e6a9bfbe", "name": "行书詹同松磵亭轴", "author": "黄宾虹"}
 ]

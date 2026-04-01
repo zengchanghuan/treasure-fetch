@@ -2,8 +2,8 @@
   <div v-if="visible" class="empty-state">
     <div class="empty-icon">🖼️</div>
     <p>
-      粘贴书画作品的页面链接，即可一键保存完整高清原图<br>
-      <span class="hint">在数字文博平台找到喜欢的作品，复制浏览器地址栏链接粘贴到这里</span>
+      粘贴台北故宫博物院公开馆藏页面链接，即可查看作品资料与研究信息<br>
+      <span class="hint">支持作者、年代、尺寸、馆藏与简介等信息整理</span>
     </p>
   </div>
 </template>
